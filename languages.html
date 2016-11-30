@@ -79,12 +79,11 @@ text {
 <script>
 
 // Various accessors that specify the four dimensions of data to visualize.
-function x(d) { return d.income; }
-function y(d) { return d.lifeExpectancy; }
-function radius(d) { return d.population; }
+function x(d) { return d.articles; }
+function y(d) { return d.users; }
+function radius(d) { return d.speakers; }
 function color(d) { return d.region; }
-function key(d) { return d.name; }
-function startyear(d) { return d.start; }
+function key(d) { return d.language; }
 
 
 // Chart dimensions.
@@ -153,7 +152,6 @@ d3.json("THEIRFORMAT.json", function(nations) {
   var bisect = d3.bisector(function(d) { return d[0]; });
 
   // Add a dot per nation. Initialize the data at 1800, and set the colors.
-  var startyear = function(d) { return parseInt(startyear(d))};
   var dot = svg.append("g")
       .attr("class", "dots")
     .selectAll(".dot")
@@ -182,7 +180,7 @@ d3.json("THEIRFORMAT.json", function(nations) {
 
   // Add a title.
   dot.append("title")
-      .text(function(d) { return d.name; });
+      .text(function(d) { return d.language; });
 
   // Add an overlay for the year label.
   var box = label.node().getBBox();
@@ -260,11 +258,11 @@ d3.json("THEIRFORMAT.json", function(nations) {
   function interpolateData(year) {
     return nations.map(function(d) {
       return {
-        name: d.name,
+        language: d.language,
         region: d.region,
-        income: interpolateValues(d.income, year),
-        population: interpolateValues(d.population, year),
-        lifeExpectancy: interpolateValues(d.lifeExpectancy, year)
+        articles: interpolateValues(d.articles, year),
+        speakers: interpolateValues(d.speakers, year),
+        users: interpolateValues(d.users, year)
       };
     });
   }
