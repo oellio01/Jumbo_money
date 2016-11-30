@@ -61,6 +61,8 @@ text {
 <p id="chart"></p>
 
 <aside>Mouseover the year to move forward and backwards through time.</aside>
+<div id="container" style="position: relative; width: 930px; height: 430px;"></div>
+
 
 <p class="attribution">Source: <a href="https://github.com/RandomEtc/mind-gapper-js">Tom Carden</a>, <a href="http://gapminder.org">Gapminder</a>.
 
@@ -75,7 +77,11 @@ text {
   <a href="../" rel="author">Mike Bostock</a>
 </footer>
 
-<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script></script>
+<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
+<script src="/datamaps/datamaps.world.js"></script>
+
 <script>
 
 // Various accessors that specify the four dimensions of data to visualize.
@@ -285,6 +291,61 @@ d3.json("THEIRFORMAT.json", function(nations) {
 });
 
 </script>
+
+<script>
+      var map = new Datamap({
+        element: document.getElementById('container'),
+        geographyConfig: {
+          borderWidth: 0.3,
+          },
+
+          fills: {
+              AFRICA: '#ffafdf',
+              NORTH_AMERICA: '#2239ad',
+              SOUTH_AMERICA: 'green',
+              EAST_ASIA: '#f44e4e',
+              SOUTHEAST_ASIA: 'purple',
+              SOUTH_ASIA: '#f97b04',
+              OCEANIA: '#f1f747',
+              CARIBBEAN: '#c17eea',
+              EASTERN_EUROPE: '#00dbef',
+              WESTERN_EUROPE: '#893046',
+              NORTHERN_EUROPE: '#4286f4',
+              SOUTHERN_EUROPE: '#db02b3',
+              CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST: '#66c17d',
+              defaultFill: 'grey'
+          },
+      });
+
+      d3.csv("regions.csv", function(error, data) {
+
+      for (var i=0;i<data.length;i++) { 
+                data[i].fillKey = {};
+
+                if (data[i].Region == 'Africa') {  data[i].fillKey = 'AFRICA'; }
+                if (data[i].Region == 'North America') {  data[i].fillKey = 'NORTH_AMERICA'; }
+                if (data[i].Region == 'South America') {  data[i].fillKey = 'SOUTH_AMERICA'; }
+                if (data[i].Region == 'East Asia') {  data[i].fillKey = 'EAST_ASIA'; }
+                if (data[i].Region == 'Southeast Asia') {  data[i].fillKey = 'SOUTHEAST_ASIA'; }
+                if (data[i].Region == 'South Asia') {  data[i].fillKey = 'SOUTH_ASIA'; }
+                if (data[i].Region == 'Oceania') {  data[i].fillKey = 'OCEANIA'; }
+                if (data[i].Region == 'Caribbean') {  data[i].fillKey = 'CARIBBEAN'; }
+                if (data[i].Region == 'Eastern Europe') {  data[i].fillKey = 'EASTERN_EUROPE'; }
+                if (data[i].Region == 'Western Europe') {  data[i].fillKey = 'WESTERN_EUROPE'; }
+                if (data[i].Region == 'Northern Europe') {  data[i].fillKey = 'NORTHERN_EUROPE'; }
+                if (data[i].Region == 'Southern Europe') {  data[i].fillKey = 'SOUTHERN_EUROPE'; }
+                if (data[i].Region == 'Caucasus, Central Asia & Middle East') {  data[i].fillKey = 'CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST'; }
+
+
+                data[ data[i].ISO] = data[i] ;
+                delete  data[i].ISO;
+                delete  data[i] ;
+            }
+      map.updateChoropleth(data);
+    }
+  );
+  </script>
+
 <script>
 
 GoogleAnalyticsObject = "ga", ga = function() { ga.q.push(arguments); }, ga.q = [], ga.l = +new Date;
