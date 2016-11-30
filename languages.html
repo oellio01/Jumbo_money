@@ -43,6 +43,13 @@ text {
   fill: #aaa;
 }
 
+.unselect{
+  opacity: 1;
+}
+.selected{
+  opacity: 0.5;
+}
+
 .overlay {
   fill: none;
   pointer-events: all;
@@ -181,6 +188,17 @@ d3.json("THEIRFORMAT.json", function(nations) {
   // Add a title.
   dot.append("title")
       .text(function(d) { return d.language; });
+
+  // dot.select(".selected")
+  //     .attr("opacity", 0.5)
+
+  dot.on("click", function(d){
+    dot.attr("class", "selected")
+    //dot.attr("opacity", 0.5)
+    console.log(d.language)
+
+  });
+
 
   // Add an overlay for the year label.
   var box = label.node().getBBox();
