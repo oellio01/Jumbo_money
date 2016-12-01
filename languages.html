@@ -43,17 +43,14 @@ text {
   fill: #aaa;
 }
 
-.unselect{
-  opacity: 1;
-}
-.selected{
-  opacity: 0.5;
-}
-
 .overlay {
   fill: none;
   pointer-events: all;
   cursor: ew-resize;
+}
+
+.selected, .unselected {
+  stroke: black;
 }
 
 </style>
@@ -66,22 +63,20 @@ text {
 <h1>Languages & Information Availability</h1>
 
 <p id="chart"></p>
-
-<aside>Mouseover the year to move forward and backwards through time.</aside>
+<aside>Mouseover the bottom of the year to move forward and backwards through time.</aside>
+<p class="attribution">Source: <a href="https://meta.wikimedia.org/wiki/List_of_Wikipedias/Table">Wikipedia metadata</a>
 <div id="container" style="position: relative; width: 930px; height: 430px;"></div>
 
 
-<p class="attribution">Source: <a href="https://github.com/RandomEtc/mind-gapper-js">Tom Carden</a>, <a href="http://gapminder.org">Gapminder</a>.
-
 <p>The languages you speak vastly affect the information you have access to. This visualization of languages supported by Wikipedia shows the dynamic fluctuation in Wikipedia articles (<i>x</i>), users (<i>y</i>) and speakers (radius) of over 200 languages over the past 9 years. Languages are colored by geographic region; when they are spoken in multiple regions, e.g. Spanish, they are colored by where they originated. Mouseover to see more information!
 
-<p>The data for this visualization was collected from <a href="https://meta.wikimedia.org/wiki/List_of_Wikipedias">various Wikipedia meta-articles</a> and Wikipedia research.
+<p>The data for this visualization was collected from <a href="https://meta.wikimedia.org/wiki/List_of_Wikipedias/Table">Wikipedia metadata</a> and research. 
 
 <p>We were inspired by <a href="view-source:https://bost.ocks.org/mike/nations/">Mike Bostock's visualization of the Wealth and Health of Nations</a>, which in turn was based off of <a href="http://www.ted.com/talks/hans_rosling_shows_the_best_stats_you_ve_ever_seen.html">Hans Rosling's 2006 TED talk. </a>
 
 <footer>
-  <aside>March 13, 2012</aside>
-  <a href="../" rel="author">Mike Bostock</a>
+  <aside>December 6, 2016</aside>
+  <a href="../" rel="author">Hannah Freedman, Owen Elliot & Sibonay Koo</a>
 </footer>
 
 <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
@@ -160,17 +155,18 @@ var label = svg.append("text")
 // Load the data.
 d3.json("THEIRFORMAT.json", function(nations) {
 
-
   // A bisector since many nation's data is sparsely-defined.
   var bisect = d3.bisector(function(d) { return d[0]; });
 
-  // Add a dot per nation. Initialize the data at 1800, and set the colors.
+  // Add a dot per nation. Initialize the data at 2007, and set the colors.
   var dot = svg.append("g")
       .attr("class", "dots")
     .selectAll(".dot")
       .data(interpolateData(2007))
     .enter().append("circle")
       .attr("class", "dot")
+      .attr("class", "unselected")
+      .on("click", clicked)
       .style("fill", function(d) { 
         var region = color(d);
         if (region == 'Africa') return '#ffafdf';
@@ -195,16 +191,22 @@ d3.json("THEIRFORMAT.json", function(nations) {
   dot.append("title")
       .text(function(d) { return d.language; });
 
-  // dot.select(".selected")
-  //     .attr("opacity", 0.5)
+  // TODO: add hover effect here
 
-  dot.on("click", function(d){
-    dot.attr("class", "selected")
-    //dot.attr("opacity", 0.5)
-    console.log(d.language)
 
-  });
-
+  function clicked(d, i) {
+    var select = d3.select(this).attr("class");
+    if (select == "unselected") {
+      dot.style("opacity", 0.3);
+      d3.select(this)
+        .style("opacity", 1)
+        .attr("class", "selected");
+      } else {
+        dot.style("opacity", 1);
+        d3.select(this)
+          .attr("class", "unselected");
+      }
+  }
 
   // Add an overlay for the year label.
   var box = label.node().getBBox();
@@ -212,7 +214,7 @@ d3.json("THEIRFORMAT.json", function(nations) {
   var overlay = svg.append("rect")
         .attr("class", "overlay")
         .attr("x", box.x)
-        .attr("y", box.y)
+        .attr("y", 350)
         .attr("width", box.width)
         .attr("height", box.height)
         .on("mouseover", enableInteraction);
@@ -314,7 +316,6 @@ d3.json("THEIRFORMAT.json", function(nations) {
         geographyConfig: {
           borderWidth: 0.3,
           },
-
           fills: {
               AFRICA: '#ffafdf',
               NORTH_AMERICA: '#2239ad',
