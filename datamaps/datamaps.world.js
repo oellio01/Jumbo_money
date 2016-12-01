@@ -12137,8 +12137,10 @@
   };
 
   Datamap.prototype.updateChoropleth = function(data) {
+    // console.log(data);
     var svg = this.svg;
     for ( var subunit in data ) {
+      // console.log(subunit);
       if ( data.hasOwnProperty(subunit) ) {
         var color;
         var subunitData = data[subunit]
@@ -12158,6 +12160,7 @@
         if ( subunitData === Object(subunitData) ) {
           this.options.data[subunit] = defaults(subunitData, this.options.data[subunit] || {});
           var geo = this.svg.select('.' + subunit).attr('data-info', JSON.stringify(this.options.data[subunit]));
+          //console.log(geo);
         }
         svg
           .selectAll('.' + subunit)

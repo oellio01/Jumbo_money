@@ -10,7 +10,10 @@
 
 <style>
 
-
+#description {
+  width: 90%;
+  position: relative;
+}
 #chart {
   margin-left: -40px;
   height: 506px;
@@ -49,9 +52,31 @@ text {
   cursor: ew-resize;
 }
 
-.selected, .unselected {
+.selected, .start_selection {
   stroke: black;
+  opacity: 1;
 }
+
+.unselected {
+  stroke: black;
+  opacity: 0.3;
+}
+.datamaps-hoverover {display: none; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; } 
+.hoverinfo {padding: 4px; border-radius: 1px; background-color: #FFF; box-shadow: 1px 1px 5px #CCC; font-size: 12px; border: 1px solid #CCC; } 
+
+
+.tooltip {
+  position: absolute;
+  text-align: center;
+  width: 60px;
+  height: 12px;
+  padding: 8px;
+  margin-top: -20px;
+  font: 10px sans-serif;
+  background: black;
+  pointer-events: none;
+}
+
 
 </style>
 
@@ -60,6 +85,7 @@ text {
   <a href="../" rel="author">Hannah Freedman, Owen Elliot & Sibonay Koo</a>
 </header>
 
+<body>
 <h1>Languages & Information Availability</h1>
 
 <p id="chart"></p>
@@ -67,12 +93,13 @@ text {
 <p class="attribution">Source: <a href="https://meta.wikimedia.org/wiki/List_of_Wikipedias/Table">Wikipedia metadata</a>
 <div id="container" style="position: relative; width: 930px; height: 430px;"></div>
 
-
+<div id="description"
 <p>The languages you speak vastly affect the information you have access to. This visualization of languages supported by Wikipedia shows the dynamic fluctuation in Wikipedia articles (<i>x</i>), users (<i>y</i>) and speakers (radius) of over 200 languages over the past 9 years. Languages are colored by geographic region; when they are spoken in multiple regions, e.g. Spanish, they are colored by where they originated. Mouseover to see more information!
 
 <p>The data for this visualization was collected from <a href="https://meta.wikimedia.org/wiki/List_of_Wikipedias/Table">Wikipedia metadata</a> and research. 
 
 <p>We were inspired by <a href="view-source:https://bost.ocks.org/mike/nations/">Mike Bostock's visualization of the Wealth and Health of Nations</a>, which in turn was based off of <a href="http://www.ted.com/talks/hans_rosling_shows_the_best_stats_you_ve_ever_seen.html">Hans Rosling's 2006 TED talk. </a>
+</div>
 
 <footer>
   <aside>December 6, 2016</aside>
@@ -155,18 +182,24 @@ var label = svg.append("text")
 // Load the data.
 d3.json("THEIRFORMAT.json", function(nations) {
 
-  // A bisector since many nation's data is sparsely-defined.
+  // A bisector; probably not actually necessary given our data
   var bisect = d3.bisector(function(d) { return d[0]; });
 
-  // Add a dot per nation. Initialize the data at 2007, and set the colors.
+  // Add a dot per language. Initialize the data at 2007, and set the colors.
   var dot = svg.append("g")
       .attr("class", "dots")
     .selectAll(".dot")
       .data(interpolateData(2007))
     .enter().append("circle")
-      .attr("class", "dot")
-      .attr("class", "unselected")
+      .attr("class", "dot start_selection")
+      //.attr("class", "start_selection")
+      .attr("region", function(d) {
+        var region = color(d);
+      })
       .on("click", clicked)
+      .on("mouseover", mouseover)
+      .on("mousemove", mousemove)
+      .on("mouseout", mouseout)
       .style("fill", function(d) { 
         var region = color(d);
         if (region == 'Africa') return '#ffafdf';
@@ -189,14 +222,41 @@ d3.json("THEIRFORMAT.json", function(nations) {
 
   // Add a title.
   dot.append("title")
-      .text(function(d) { return d.language; });
+      .text(function(d) { 
+        var text = d.language + "\nSpeakers: " + d.speakers + "\nArticles: " + d.articles + 
+        "\nUsers: " + d.users + "\nRegion: " + d.region;
+        return text });
 
-  // TODO: add hover effect here
+var div = d3.select("body").append("div")    
+    .attr("class", "tooltip")
+    .style("display", "none");
 
+function mouseover() {
+  console.log("mouseover");
+  div.style("display", "inline");
+}
+
+function mousemove() {
+    console.log("mousemove");
+
+  div
+      .text(function(d) { 
+        var text = d.language + "\nSpeakers: " + d.speakers + "\nArticles: " + d.articles + 
+        "\nUsers: " + d.users + "\nRegion: " + d.region;
+        return text })
+      .style("left", (d3.event.pageX - 34) + "px")
+      .style("top", (d3.event.pageY - 12) + "px");
+}
+
+function mouseout() {
+    console.log("mouseout");
+
+  div.style("display", "none");
+}
 
   function clicked(d, i) {
     var select = d3.select(this).attr("class");
-    if (select == "unselected") {
+    if ((select == "unselected") || (select == "start_selection")) {
       dot.style("opacity", 0.3);
       d3.select(this)
         .style("opacity", 1)
@@ -206,6 +266,20 @@ d3.json("THEIRFORMAT.json", function(nations) {
         d3.select(this)
           .attr("class", "unselected");
       }
+  }
+
+  // link map with dots
+  function updateDotsByRegion(region, dot) {
+    dot.style("opacity", function(d) {
+      var location = color(d);
+      // handle different name
+      if (location == "Caucasus Central Asia & Middle East") {
+        location = "Caucasus, Central Asia & Middle East";
+      }
+      if (location != region) {
+        return 0.2;
+      }
+    })
   }
 
   // Add an overlay for the year label.
@@ -306,15 +380,29 @@ d3.json("THEIRFORMAT.json", function(nations) {
     }
     return a[1];
   }
-});
 
-</script>
-
-<script>
-      var map = new Datamap({
+   var map = new Datamap({
         element: document.getElementById('container'),
+        done: function(map) {
+          map.svg.selectAll('.datamaps-subunit').on('click', function(geo) {
+            var localData = map.options.data[geo.id];
+            var country = geo.id;
+            var region = "";
+            if ( localData && localData.Region ) {
+              region = localData.Region;
+              updateMap(region, localData.Country);
+              updateDotsByRegion(region, dot);
+            }
+          })
+        },
         geographyConfig: {
           borderWidth: 0.3,
+          popupTemplate: function(geo, data) {
+                return ['<div class="hoverinfo"><strong>',
+                        ' ' + geo.properties.name,
+                        ': ' + data.Region,
+                        '</strong></div>'].join('');
+            }
           },
           fills: {
               AFRICA: '#ffafdf',
@@ -330,37 +418,107 @@ d3.json("THEIRFORMAT.json", function(nations) {
               NORTHERN_EUROPE: '#4286f4',
               SOUTHERN_EUROPE: '#db02b3',
               CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST: '#66c17d',
-              defaultFill: 'grey'
-          },
+
+              AFRICA_LIGHT: '#ffe6f5',
+              NORTH_AMERICA_LIGHT: '#bec9f3',
+              SOUTH_AMERICA_LIGHT: '#ccffcc',
+              EAST_ASIA_LIGHT: '#fccfcf',
+              SOUTHEAST_ASIA_LIGHT: '#ffb3ff',
+              SOUTH_ASIA_LIGHT: '#fed8b4',
+              OCEANIA_LIGHT: '#fbfdce',
+              CARIBBEAN_LIGHT: '#ead3f8',
+              EASTERN_EUROPE_LIGHT: '#ccfbff',
+              WESTERN_EUROPE_LIGHT: '#e4b4c1',
+              NORTHERN_EUROPE_LIGHT: '#b7d1fa',
+              SOUTHERN_EUROPE_LIGHT: '#feb3f0',
+              CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST_LIGHT: '#b7e1c1',
+
+              NOFILL: 'grey',
+              defaultFill: 'white'
+          }, 
       });
 
+var where = "";
+var country = "";
+updateMap(where, country);
+function updateMap(region, country) {
+      var countryFill = getFillKey(region);
+
       d3.csv("regions.csv", function(error, data) {
+      // normal map; specific region was not clicked
+      if (region == "") {
+        for (var i = 0; i < data.length; i++) { 
+          data[i].fillKey = getFillKey(data[i].Region);
 
-      for (var i=0;i<data.length;i++) { 
-                data[i].fillKey = {};
-
-                if (data[i].Region == 'Africa') {  data[i].fillKey = 'AFRICA'; }
-                if (data[i].Region == 'North America') {  data[i].fillKey = 'NORTH_AMERICA'; }
-                if (data[i].Region == 'South America') {  data[i].fillKey = 'SOUTH_AMERICA'; }
-                if (data[i].Region == 'East Asia') {  data[i].fillKey = 'EAST_ASIA'; }
-                if (data[i].Region == 'Southeast Asia') {  data[i].fillKey = 'SOUTHEAST_ASIA'; }
-                if (data[i].Region == 'South Asia') {  data[i].fillKey = 'SOUTH_ASIA'; }
-                if (data[i].Region == 'Oceania') {  data[i].fillKey = 'OCEANIA'; }
-                if (data[i].Region == 'Caribbean') {  data[i].fillKey = 'CARIBBEAN'; }
-                if (data[i].Region == 'Eastern Europe') {  data[i].fillKey = 'EASTERN_EUROPE'; }
-                if (data[i].Region == 'Western Europe') {  data[i].fillKey = 'WESTERN_EUROPE'; }
-                if (data[i].Region == 'Northern Europe') {  data[i].fillKey = 'NORTHERN_EUROPE'; }
-                if (data[i].Region == 'Southern Europe') {  data[i].fillKey = 'SOUTHERN_EUROPE'; }
-                if (data[i].Region == 'Caucasus, Central Asia & Middle East') {  data[i].fillKey = 'CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST'; }
-
-
-                data[ data[i].ISO] = data[i] ;
-                delete  data[i].ISO;
-                delete  data[i] ;
+          data[ data[i].ISO] = data[i] ;
+          delete  data[i].ISO;
+          delete  data[i] ;
+        }
+      } else { // highlight a specific region
+        for (var i = 0; i < data.length; i++) { 
+            data[i].fillKey = {};
+            if (data[i].Region == region) {
+              data[i].fillKey = getFillKey(region);
+              if (data[i].Country == country){
+                data[i].fillKey = countryFill;
+              }
+            } else {   
+            // decrease saturation for all other regions         
+             data[i].fillKey = getLightFillKey(data[i].Region);
             }
-      map.updateChoropleth(data);
+
+            data[ data[i].ISO] = data[i] ;
+
+            delete  data[i].ISO;
+            delete  data[i] ;
+        }  
+        //data[country].fillKey = countryFill;
+      }
+
+      map.updateChoropleth(data, {reset: true});
     }
   );
+}
+
+function getFillKey(region) {
+  if (region == 'Africa') { return 'AFRICA'; }
+  if (region == 'North America') { return 'NORTH_AMERICA'; }
+  if (region == 'South America') { return 'SOUTH_AMERICA'; }
+  if (region == 'East Asia') { return 'EAST_ASIA'; }
+  if (region == 'Southeast Asia') { return 'SOUTHEAST_ASIA'; }
+  if (region == 'South Asia') { return 'SOUTH_ASIA'; }
+  if (region == 'Oceania') { return 'OCEANIA'; }
+  if (region == 'Caribbean') {  return'CARIBBEAN'; }
+  if (region == 'Eastern Europe') { return 'EASTERN_EUROPE'; }
+  if (region == 'Western Europe') { return 'WESTERN_EUROPE'; }
+  if (region == 'Northern Europe') { return 'NORTHERN_EUROPE'; }
+  if (region == 'Southern Europe') { return 'SOUTHERN_EUROPE'; }
+  if (region == 'Caucasus, Central Asia & Middle East') { return 'CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST'; }  
+}
+
+function getLightFillKey(region) {
+  if (region == 'Africa') { return 'AFRICA_LIGHT'; }
+  if (region == 'North America') { return 'NORTH_AMERICA_LIGHT'; }
+  if (region == 'South America') { return 'SOUTH_AMERICA_LIGHT'; }
+  if (region == 'East Asia') { return 'EAST_ASIA_LIGHT'; }
+  if (region == 'Southeast Asia') { return 'SOUTHEAST_ASIA_LIGHT'; }
+  if (region == 'South Asia') { return 'SOUTH_ASIA_LIGHT'; }
+  if (region == 'Oceania') { return 'OCEANIA_LIGHT'; }
+  if (region == 'Caribbean') {  return'CARIBBEAN_LIGHT'; }
+  if (region == 'Eastern Europe') { return 'EASTERN_EUROPE_LIGHT'; }
+  if (region == 'Western Europe') { return 'WESTERN_EUROPE_LIGHT'; }
+  if (region == 'Northern Europe') { return 'NORTHERN_EUROPE_LIGHT'; }
+  if (region == 'Southern Europe') { return 'SOUTHERN_EUROPE_LIGHT'; }
+  if (region == 'Caucasus, Central Asia & Middle East') { return 'CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST_LIGHT'; }  
+}
+
+});
+
+</script>
+
+<script>
+     
+
   </script>
 
 <script>
