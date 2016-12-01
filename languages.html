@@ -89,7 +89,7 @@ text {
 <h1>Languages & Information Availability</h1>
 
 <p id="chart"></p>
-<aside>Mouseover the bottom of the year to move forward and backwards through time.</aside>
+<aside>Mouseover the bottom of the year to move forward and backwards through time. Click on a map region to highlight the corresponding languages on the graph.</aside>
 <p class="attribution">Source: <a href="https://meta.wikimedia.org/wiki/List_of_Wikipedias/Table">Wikipedia metadata</a>
 <div id="container" style="position: relative; width: 930px; height: 430px;"></div>
 
@@ -179,6 +179,9 @@ var label = svg.append("text")
     .attr("x", width)
     .text(2007);
 
+// whether or not a region is currently highlighted
+var regionHighlighted = { highlighted: false };
+
 // Load the data.
 d3.json("THEIRFORMAT.json", function(nations) {
 
@@ -191,15 +194,15 @@ d3.json("THEIRFORMAT.json", function(nations) {
     .selectAll(".dot")
       .data(interpolateData(2007))
     .enter().append("circle")
-      .attr("class", "dot start_selection")
-      //.attr("class", "start_selection")
+      //.attr("class", "dot start_selection")
+      .attr("class", "start_selection")
       .attr("region", function(d) {
         var region = color(d);
       })
       .on("click", clicked)
-      .on("mouseover", mouseover)
-      .on("mousemove", mousemove)
-      .on("mouseout", mouseout)
+      // .on("mouseover", mouseover)
+      // .on("mousemove", mousemove)
+      // .on("mouseout", mouseout)
       .style("fill", function(d) { 
         var region = color(d);
         if (region == 'Africa') return '#ffafdf';
@@ -208,7 +211,7 @@ d3.json("THEIRFORMAT.json", function(nations) {
         else if (region == 'East Asia') return 'f44e4e';
         else if (region == 'Southeast Asia') return 'purple';
         else if (region == 'South Asia') return 'f97b04';
-        else if (region == 'Oceania') return '#f97b04';
+        else if (region == 'Oceania') return '#f1f747';
         else if (region == 'Caribbean') return '#c17eea';
         else if (region == 'Eastern Europe') return '#00dbef';
         else if (region == 'Western Europe') return '#893046';
@@ -231,33 +234,38 @@ var div = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("display", "none");
 
-function mouseover() {
-  console.log("mouseover");
-  div.style("display", "inline");
-}
+// function mouseover() {
+//   console.log("mouseover");
+//   div.style("display", "inline");
+// }
 
-function mousemove() {
-    console.log("mousemove");
+// function mousemove() {
+//     console.log("mousemove");
 
-  div
-      .text(function(d) { 
-        var text = d.language + "\nSpeakers: " + d.speakers + "\nArticles: " + d.articles + 
-        "\nUsers: " + d.users + "\nRegion: " + d.region;
-        return text })
-      .style("left", (d3.event.pageX - 34) + "px")
-      .style("top", (d3.event.pageY - 12) + "px");
-}
+//   div
+//       .text(function(d) { 
+//         var text = d.language + "\nSpeakers: " + d.speakers + "\nArticles: " + d.articles + 
+//         "\nUsers: " + d.users + "\nRegion: " + d.region;
+//         return text })
+//       .style("left", (d3.event.pageX - 34) + "px")
+//       .style("top", (d3.event.pageY - 12) + "px");
+// }
 
-function mouseout() {
-    console.log("mouseout");
+// function mouseout() {
+//     console.log("mouseout");
 
-  div.style("display", "none");
-}
+//   div.style("display", "none");
+// }
 
   function clicked(d, i) {
+    if (regionHighlighted.highlighted == true) {
+      updateMap("", country, regionHighlighted);
+      regionHighlighted.highlighted = false;
+    }
+
     var select = d3.select(this).attr("class");
     if ((select == "unselected") || (select == "start_selection")) {
-      dot.style("opacity", 0.3);
+      dot.style("opacity", 0.2);
       d3.select(this)
         .style("opacity", 1)
         .attr("class", "selected");
@@ -390,7 +398,7 @@ function mouseout() {
             var region = "";
             if ( localData && localData.Region ) {
               region = localData.Region;
-              updateMap(region, localData.Country);
+              updateMap(region, localData.Country, regionHighlighted);
               updateDotsByRegion(region, dot);
             }
           })
@@ -440,13 +448,15 @@ function mouseout() {
 
 var where = "";
 var country = "";
-updateMap(where, country);
-function updateMap(region, country) {
+updateMap(where, country, regionHighlighted);
+
+function updateMap(region, country, regionHighlighted) {
       var countryFill = getFillKey(region);
 
       d3.csv("regions.csv", function(error, data) {
       // normal map; specific region was not clicked
-      if (region == "") {
+      if ((region == "") || (regionHighlighted.highlighted == true)) {
+    
         for (var i = 0; i < data.length; i++) { 
           data[i].fillKey = getFillKey(data[i].Region);
 
@@ -454,6 +464,8 @@ function updateMap(region, country) {
           delete  data[i].ISO;
           delete  data[i] ;
         }
+        regionHighlighted.highlighted = false;
+
       } else { // highlight a specific region
         for (var i = 0; i < data.length; i++) { 
             data[i].fillKey = {};
@@ -472,9 +484,9 @@ function updateMap(region, country) {
             delete  data[i].ISO;
             delete  data[i] ;
         }  
+        regionHighlighted.highlighted = true;       
         //data[country].fillKey = countryFill;
       }
-
       map.updateChoropleth(data, {reset: true});
     }
   );
