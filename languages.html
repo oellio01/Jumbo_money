@@ -202,9 +202,9 @@ d3.json("THEIRFORMAT.json", function(nations) {
         var region = color(d);
       })
       .on("click", clicked)
-      // .on("mouseover", mouseover)
-      // .on("mousemove", mousemove)
-      // .on("mouseout", mouseout)
+      .on("mouseover", mouseover)
+      .on("mousemove", mousemove)
+      .on("mouseout", mouseout)
       .style("fill", function(d) { 
         var region = color(d);
         if (region == 'Africa') return '#ffafdf';
@@ -236,28 +236,28 @@ var div = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("display", "none");
 
-// function mouseover() {
-//   console.log("mouseover");
-//   div.style("display", "inline");
-// }
+function mouseover() {
+  console.log("mouseover");
+  div.style("display", "inline");
+}
 
-// function mousemove() {
-//     console.log("mousemove");
+function mousemove() {
+    console.log("mousemove");
 
-//   div
-//       .text(function(d) { 
-//         var text = d.language + "\nSpeakers: " + d.speakers + "\nArticles: " + d.articles + 
-//         "\nUsers: " + d.users + "\nRegion: " + d.region;
-//         return text })
-//       .style("left", (d3.event.pageX - 34) + "px")
-//       .style("top", (d3.event.pageY - 12) + "px");
-// }
+  div
+      .text(function(d) { 
+        var text = d.language + "\nSpeakers: " + d.speakers + "\nArticles: " + d.articles + 
+        "\nUsers: " + d.users + "\nRegion: " + d.region;
+        return text })
+      .style("left", (d3.event.pageX - 34) + "px")
+      .style("top", (d3.event.pageY - 12) + "px");
+}
 
-// function mouseout() {
-//     console.log("mouseout");
+function mouseout() {
+    console.log("mouseout");
 
-//   div.style("display", "none");
-// }
+  div.style("display", "none");
+}
 
   function clicked(d, i) {
     // if (regionHighlighted.highlighted == true) {
