@@ -180,7 +180,9 @@ var label = svg.append("text")
     .text(2007);
 
 // whether or not a region is currently highlighted
-var regionHighlighted = { highlighted: false };
+var regionHighlighted = { 
+  highlighted: false,
+  region : "none" };
 
 // Load the data.
 d3.json("THEIRFORMAT.json", function(nations) {
@@ -217,7 +219,7 @@ d3.json("THEIRFORMAT.json", function(nations) {
         else if (region == 'Western Europe') return '#893046';
         else if (region == 'Northern Europe') return '#4286f4';
         else if (region == 'Southern Europe') return '#db02b3';
-        else if (region == 'Caucasus Central Asia & Middle East') return '#66c17d';
+        else if (region == 'Caucasus, Central Asia & Middle East') return '#66c17d';
 
       })
       .call(position)
@@ -258,36 +260,41 @@ var div = d3.select("body").append("div")
 // }
 
   function clicked(d, i) {
-    if (regionHighlighted.highlighted == true) {
-      updateMap("", country, regionHighlighted);
-      regionHighlighted.highlighted = false;
-    }
+    // if (regionHighlighted.highlighted == true) {
+    //   updateMap("", country, regionHighlighted);
+    //   regionHighlighted.highlighted = false;
+    // }
 
     var select = d3.select(this).attr("class");
     if ((select == "unselected") || (select == "start_selection")) {
+      regionHighlighted.highlighted = false;
+      updateMap(d.region, country, regionHighlighted, false);
+
       dot.style("opacity", 0.2);
       d3.select(this)
         .style("opacity", 1)
         .attr("class", "selected");
       } else {
+        regionHighlighted.highlighted = true;
+        updateMap(d.region, country, regionHighlighted, true);
         dot.style("opacity", 1);
         d3.select(this)
           .attr("class", "unselected");
-      }
+      } 
   }
 
   // link map with dots
   function updateDotsByRegion(region, dot) {
-    dot.style("opacity", function(d) {
-      var location = color(d);
-      // handle different name
-      if (location == "Caucasus Central Asia & Middle East") {
-        location = "Caucasus, Central Asia & Middle East";
-      }
-      if (location != region) {
-        return 0.2;
-      }
-    })
+    if (region != "none") {
+      dot.style("opacity", function(d) {
+        var location = color(d);
+        if (location != region) {
+          return 0.2;
+        }
+      })
+    } else {
+      dot.style("opacity", 1);
+    }
   }
 
   // Add an overlay for the year label.
@@ -398,7 +405,7 @@ var div = d3.select("body").append("div")
             var region = "";
             if ( localData && localData.Region ) {
               region = localData.Region;
-              updateMap(region, localData.Country, regionHighlighted);
+              updateMap(region, localData.Country, regionHighlighted, false);
               updateDotsByRegion(region, dot);
             }
           })
@@ -448,15 +455,19 @@ var div = d3.select("body").append("div")
 
 var where = "";
 var country = "";
-updateMap(where, country, regionHighlighted);
+updateMap(where, country, regionHighlighted, false);
 
-function updateMap(region, country, regionHighlighted) {
+function updateMap(region, country, regionHighlighted, reset) {
       var countryFill = getFillKey(region);
 
       d3.csv("regions.csv", function(error, data) {
       // normal map; specific region was not clicked
-      if ((region == "") || (regionHighlighted.highlighted == true)) {
-    
+      if ((region == "") || (reset == true) || (region == regionHighlighted.region)) {
+        console.log("region:-updateMap " + region);
+        console.log("highlighted-updateMap: " + regionHighlighted.region);
+        if (region == regionHighlighted.region) {
+          updateDotsByRegion("none", dot);
+        }
         for (var i = 0; i < data.length; i++) { 
           data[i].fillKey = getFillKey(data[i].Region);
 
@@ -465,6 +476,7 @@ function updateMap(region, country, regionHighlighted) {
           delete  data[i] ;
         }
         regionHighlighted.highlighted = false;
+        regionHighlighted.region = "none"; 
 
       } else { // highlight a specific region
         for (var i = 0; i < data.length; i++) { 
@@ -484,7 +496,8 @@ function updateMap(region, country, regionHighlighted) {
             delete  data[i].ISO;
             delete  data[i] ;
         }  
-        regionHighlighted.highlighted = true;       
+        regionHighlighted.highlighted = true;
+        regionHighlighted.region = region;      
         //data[country].fillKey = countryFill;
       }
       map.updateChoropleth(data, {reset: true});
