@@ -64,19 +64,64 @@ text {
 .datamaps-hoverover {display: none; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; } 
 .hoverinfo {padding: 4px; border-radius: 1px; background-color: #FFF; box-shadow: 1px 1px 5px #CCC; font-size: 12px; border: 1px solid #CCC; } 
 
-
-.tooltip {
-  position: absolute;
-  text-align: center;
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
   width: 60px;
-  height: 12px;
-  padding: 8px;
-  margin-top: -20px;
-  font: 10px sans-serif;
-  background: black;
-  pointer-events: none;
+  height: 34px;
 }
 
+/* Hide default HTML checkbox */
+.switch input {display:none;}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
 
 </style>
 
@@ -86,12 +131,25 @@ text {
 </header>
 
 <body>
-<h1>Languages & Information Availability</h1>
+<h1>The Languages of Wikipedia</h1>
 
 <p id="chart"></p>
 <aside>Mouseover the bottom of the year to move forward and backwards through time. Click on a map region to highlight the corresponding languages on the graph.</aside>
 <p class="attribution">Source: <a href="https://meta.wikimedia.org/wiki/List_of_Wikipedias/Table">Wikipedia metadata</a>
+<div id="chart-options"> 
+  <label class="switch">
+
+<!--     <div class="squaredThree">
+      <input type="checkbox" value="None" id="squaredThree" name="check" checked />
+      <label for="squaredThree"></label>
+    </div> -->
+    
+  <input type="checkbox">
+  <div id="toggle" class="slider round"></div>
+</label>
+</div>
 <div id="container" style="position: relative; width: 930px; height: 430px;"></div>
+
 
 <div id="description"
 <p>The languages you speak vastly affect the information you have access to. This visualization of languages supported by Wikipedia shows the dynamic fluctuation in Wikipedia articles (<i>x</i>), users (<i>y</i>) and speakers (radius) of over 200 languages over the past 9 years. Languages are colored by geographic region; when they are spoken in multiple regions, e.g. Spanish, they are colored by where they originated. Mouseover to see more information!
@@ -120,424 +178,419 @@ function radius(d) { return d.speakers; }
 function color(d) { return d.region; }
 function key(d) { return d.language; }
 
+// whether the chart is set to a linear or logarithmic scale
+var scale = "log";
+var toggle = document.getElementById("toggle");
+toggle.addEventListener("click", function() {
+  d3.select("svg").remove();
+  setUpChart("linear");
+});
 
-// Chart dimensions.
-var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 39.5},
-    width = 960 - margin.right,
-    height = 500 - margin.top - margin.bottom;
+function setUpChart(scale) {
+  // Chart dimensions.
+  var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 39.5},
+      width = 960 - margin.right,
+      height = 500 - margin.top - margin.bottom;
 
-// Various scales. These domains make assumptions of data, naturally.
-var xScale = d3.scale.log().domain([100, 6000000]).range([0, width]),
-    yScale = d3.scale.log().domain([100, 30000000]).range([height, 0]),
-    radiusScale = d3.scale.sqrt().domain([0, 1200294060 ]).range([0, 100]),
-    colorScale = d3.scale.category10();
+  if (scale == "linear") {
+  // Various scales. These domains make assumptions of data, naturally.
+    xScale = d3.scale.linear().domain([100, 6000000]).range([0, width]),
+    yScale = d3.scale.linear().domain([100, 30000000]).range([height, 0]);
+  } else {
+    xScale = d3.scale.log().domain([100, 6000000]).range([0, width]),
+    yScale = d3.scale.log().domain([100, 30000000]).range([height, 0]);
+  }
+  radiusScale = d3.scale.sqrt().domain([0, 1200294060 ]).range([0, 100]),
+  colorScale = d3.scale.category10();
 
-// The x & y axes.
-var xAxis = d3.svg.axis().orient("bottom").scale(xScale).ticks(12, d3.format(",d")),
-    yAxis = d3.svg.axis().scale(yScale).orient("left");
 
-// Create the SVG container and set the origin.
-var svg = d3.select("#chart").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  // The x & y axes.
+  var xAxis = d3.svg.axis().orient("bottom").scale(xScale).ticks(12, d3.format(",d")),
+      yAxis = d3.svg.axis().scale(yScale).orient("left");
 
-// Add the x-axis.
-svg.append("g")
-    .attr("class", "x axis")
-    .attr("transform", "translate(0," + height + ")")
-    .call(xAxis);
+  // Create the SVG container and set the origin.
+   svg = d3.select("#chart").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-// Add the y-axis.
-svg.append("g")
-    .attr("class", "y axis")
-    .call(yAxis);
+  // Add the x-axis.
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
 
-// Add an x-axis label.
-svg.append("text")
-    .attr("class", "x label")
-    .attr("text-anchor", "end")
-    .attr("x", width)
-    .attr("y", height - 6)
-    .text("number of articles");
+  // Add the y-axis.
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
 
-// Add a y-axis label.
-svg.append("text")
-    .attr("class", "y label")
-    .attr("text-anchor", "end")
-    .attr("y", 6)
-    .attr("dy", ".75em")
-    .attr("transform", "rotate(-90)")
-    .text("number of users");
+  // Add an x-axis label.
+  svg.append("text")
+      .attr("class", "x label")
+      .attr("text-anchor", "end")
+      .attr("x", width)
+      .attr("y", height - 6)
+      .text("number of articles");
 
-// Add the year label; the value is set on transition.
-var label = svg.append("text")
-    .attr("class", "year label")
-    .attr("text-anchor", "end")
-    .attr("y", height - 24)
-    .attr("x", width)
-    .text(2007);
+  // Add a y-axis label.
+  svg.append("text")
+      .attr("class", "y label")
+      .attr("text-anchor", "end")
+      .attr("y", 6)
+      .attr("dy", ".75em")
+      .attr("transform", "rotate(-90)")
+      .text("number of users");
+
+  // Add the year label; the value is set on transition.
+   label = svg.append("text")
+      .attr("class", "year label")
+      .attr("text-anchor", "end")
+      .attr("y", height - 24)
+      .attr("x", width)
+      .text(2007);
+
+      makeChart(scale);
+}
+
+setUpChart("log");
 
 // whether or not a region is currently highlighted
 var regionHighlighted = { 
   highlighted: false,
   region : "none" };
 
-// Load the data.
-d3.json("THEIRFORMAT.json", function(nations) {
+function makeChart (scale) {
+  console.log(scale);
+  // Load the data.
+  d3.json("THEIRFORMAT.json", function(nations) {
 
-  // A bisector; probably not actually necessary given our data
-  var bisect = d3.bisector(function(d) { return d[0]; });
+    // A bisector; probably not actually necessary given our data
+    var bisect = d3.bisector(function(d) { return d[0]; });
 
-  // Add a dot per language. Initialize the data at 2007, and set the colors.
-  var dot = svg.append("g")
-      .attr("class", "dots")
-    .selectAll(".dot")
-      .data(interpolateData(2007))
-    .enter().append("circle")
-      //.attr("class", "dot start_selection")
-      .attr("class", "start_selection")
-      .attr("region", function(d) {
-        var region = color(d);
-      })
-      .on("click", clicked)
-      .on("mouseover", mouseover)
-      .on("mousemove", mousemove)
-      .on("mouseout", mouseout)
-      .style("fill", function(d) { 
-        var region = color(d);
-        if (region == 'Africa') return '#ffafdf';
-        else if (region == 'North America') return '#2239ad';
-        else if (region == 'South America') return 'green';
-        else if (region == 'East Asia') return 'f44e4e';
-        else if (region == 'Southeast Asia') return 'purple';
-        else if (region == 'South Asia') return 'f97b04';
-        else if (region == 'Oceania') return '#f1f747';
-        else if (region == 'Caribbean') return '#c17eea';
-        else if (region == 'Eastern Europe') return '#00dbef';
-        else if (region == 'Western Europe') return '#893046';
-        else if (region == 'Northern Europe') return '#4286f4';
-        else if (region == 'Southern Europe') return '#db02b3';
-        else if (region == 'Caucasus, Central Asia & Middle East') return '#66c17d';
+    // Add a dot per language. Initialize the data at 2007, and set the colors.
+    var dot = svg.append("g")
+        .attr("class", "dots")
+      .selectAll(".dot")
+        .data(interpolateData(2007))
+      .enter().append("circle")
+        //.attr("class", "dot start_selection")
+        .attr("class", "start_selection")
+        .attr("region", function(d) {
+          var region = color(d);
+        })
+        .on("click", clicked)
+        .style("fill", function(d) { 
+          var region = color(d);
+          if (region == 'Africa') return '#ffafdf';
+          else if (region == 'North America') return '#2239ad';
+          else if (region == 'South America') return 'green';
+          else if (region == 'East Asia') return 'f44e4e';
+          else if (region == 'Southeast Asia') return 'purple';
+          else if (region == 'South Asia') return 'f97b04';
+          else if (region == 'Oceania') return '#f1f747';
+          else if (region == 'Caribbean') return '#c17eea';
+          else if (region == 'Eastern Europe') return '#00dbef';
+          else if (region == 'Western Europe') return '#893046';
+          else if (region == 'Northern Europe') return '#4286f4';
+          else if (region == 'Southern Europe') return '#db02b3';
+          else if (region == 'Caucasus, Central Asia & Middle East') return '#66c17d';
 
-      })
-      .call(position)
-      .sort(order);
+        })
+        .call(position)
+        .sort(order);
 
-  // Add a title.
-  dot.append("title")
-      .text(function(d) { 
-        var text = d.language + "\nSpeakers: " + d.speakers + "\nArticles: " + d.articles + 
-        "\nUsers: " + d.users + "\nRegion: " + d.region;
-        return text });
+    // Add a title.
+    dot.append("title")
+        .text(function(d) { 
+          var text = d.language + "\nSpeakers: " + d.speakers + "\nArticles: " + d.articles + 
+          "\nUsers: " + d.users + "\nRegion: " + d.region;
+          return text });
 
-var div = d3.select("body").append("div")    
-    .attr("class", "tooltip")
-    .style("display", "none");
+    function clicked(d, i) {
 
-function mouseover() {
-  console.log("mouseover");
-  div.style("display", "inline");
-}
-
-function mousemove() {
-    console.log("mousemove");
-
-  div
-      .text(function(d) { 
-        var text = d.language + "\nSpeakers: " + d.speakers + "\nArticles: " + d.articles + 
-        "\nUsers: " + d.users + "\nRegion: " + d.region;
-        return text })
-      .style("left", (d3.event.pageX - 34) + "px")
-      .style("top", (d3.event.pageY - 12) + "px");
-}
-
-function mouseout() {
-    console.log("mouseout");
-
-  div.style("display", "none");
-}
-
-  function clicked(d, i) {
-    // if (regionHighlighted.highlighted == true) {
-    //   updateMap("", country, regionHighlighted);
-    //   regionHighlighted.highlighted = false;
-    // }
-
-    var select = d3.select(this).attr("class");
-    if ((select == "unselected") || (select == "start_selection")) {
-      regionHighlighted.highlighted = false;
-      updateMap(d.region, country, regionHighlighted, false);
-
-      dot.style("opacity", 0.2);
-      d3.select(this)
-        .style("opacity", 1)
-        .attr("class", "selected");
-      } else {
-        regionHighlighted.highlighted = true;
-        updateMap(d.region, country, regionHighlighted, true);
-        dot.style("opacity", 1);
-        d3.select(this)
-          .attr("class", "unselected");
-      } 
-  }
-
-  // link map with dots
-  function updateDotsByRegion(region, dot) {
-    if (region != "none") {
-      dot.style("opacity", function(d) {
-        var location = color(d);
-        if (location != region) {
-          return 0.2;
-        }
-      })
-    } else {
-      dot.style("opacity", 1);
-    }
-  }
-
-  // Add an overlay for the year label.
-  var box = label.node().getBBox();
-
-  var overlay = svg.append("rect")
-        .attr("class", "overlay")
-        .attr("x", box.x)
-        .attr("y", 350)
-        .attr("width", box.width)
-        .attr("height", box.height)
-        .on("mouseover", enableInteraction);
-
-  // Start a transition that interpolates the data based on year.
-  svg.transition()
-      .duration(10000)
-      .ease("linear")
-      .tween("year", tweenYear)
-      .each("end", enableInteraction);
-
-  // Positions the dots based on data.
-  function position(dot) {
-    dot .attr("cx", function(d) { return xScale(x(d)); })
-        .attr("cy", function(d) { return yScale(y(d)); })
-        .attr("r", function(d) { return radiusScale(radius(d)); });
-  }
-
-  // Defines a sort order so that the smallest dots are drawn on top.
-  function order(a, b) {
-    return radius(b) - radius(a);
-  }
-
-  // After the transition finishes, you can mouseover to change the year.
-  function enableInteraction() {
-    var yearScale = d3.scale.linear()
-        .domain([2007, 2015])
-        .range([box.x + 10, box.x + box.width - 10])
-        .clamp(true);
-
-    // Cancel the current transition, if any.
-    svg.transition().duration(0);
-
-    overlay
-        .on("mouseover", mouseover)
-        .on("mouseout", mouseout)
-        .on("mousemove", mousemove)
-        .on("touchmove", mousemove);
-
-    function mouseover() {
-      label.classed("active", true);
-    }
-
-    function mouseout() {
-      label.classed("active", false);
-    }
-
-    function mousemove() {
-      displayYear(yearScale.invert(d3.mouse(this)[0]));
-    }
-  }
-
-  // Tweens the entire chart by first tweening the year, and then the data.
-  // For the interpolated data, the dots and label are redrawn.
-  function tweenYear() {
-    var year = d3.interpolateNumber(2007, 2015);
-    return function(t) { displayYear(year(t)); };
-  }
-
-  // Updates the display to show the specified year.
-  function displayYear(year) {
-    dot.data(interpolateData(year), key).call(position).sort(order);
-    label.text(Math.round(year));
-  }
-
-  // Interpolates the dataset for the given (fractional) year.
-  function interpolateData(year) {
-    return nations.map(function(d) {
-      return {
-        language: d.language,
-        region: d.region,
-        articles: interpolateValues(d.articles, year),
-        speakers: interpolateValues(d.speakers, year),
-        users: interpolateValues(d.users, year)
-      };
-    });
-  }
-
-  // Finds (and possibly interpolates) the value for the specified year.
-  function interpolateValues(values, year) {
-    var i = bisect.left(values, year, 0, values.length - 1),
-        a = values[i];
-    if (i > 0) {
-      var b = values[i - 1],
-          t = (year - a[0]) / (b[0] - a[0]);
-      
-      var v = a[1] * (1 - t) + b[1] * t
-      return v;
-    }
-    return a[1];
-  }
-
-   var map = new Datamap({
-        element: document.getElementById('container'),
-        done: function(map) {
-          map.svg.selectAll('.datamaps-subunit').on('click', function(geo) {
-            var localData = map.options.data[geo.id];
-            var country = geo.id;
-            var region = "";
-            if ( localData && localData.Region ) {
-              region = localData.Region;
-              updateMap(region, localData.Country, regionHighlighted, false);
-              updateDotsByRegion(region, dot);
-            }
-          })
-        },
-        geographyConfig: {
-          borderWidth: 0.3,
-          popupTemplate: function(geo, data) {
-                return ['<div class="hoverinfo"><strong>',
-                        ' ' + geo.properties.name,
-                        ': ' + data.Region,
-                        '</strong></div>'].join('');
-            }
-          },
-          fills: {
-              AFRICA: '#ffafdf',
-              NORTH_AMERICA: '#2239ad',
-              SOUTH_AMERICA: 'green',
-              EAST_ASIA: '#f44e4e',
-              SOUTHEAST_ASIA: 'purple',
-              SOUTH_ASIA: '#f97b04',
-              OCEANIA: '#f1f747',
-              CARIBBEAN: '#c17eea',
-              EASTERN_EUROPE: '#00dbef',
-              WESTERN_EUROPE: '#893046',
-              NORTHERN_EUROPE: '#4286f4',
-              SOUTHERN_EUROPE: '#db02b3',
-              CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST: '#66c17d',
-
-              AFRICA_LIGHT: '#ffe6f5',
-              NORTH_AMERICA_LIGHT: '#bec9f3',
-              SOUTH_AMERICA_LIGHT: '#ccffcc',
-              EAST_ASIA_LIGHT: '#fccfcf',
-              SOUTHEAST_ASIA_LIGHT: '#ffb3ff',
-              SOUTH_ASIA_LIGHT: '#fed8b4',
-              OCEANIA_LIGHT: '#fbfdce',
-              CARIBBEAN_LIGHT: '#ead3f8',
-              EASTERN_EUROPE_LIGHT: '#ccfbff',
-              WESTERN_EUROPE_LIGHT: '#e4b4c1',
-              NORTHERN_EUROPE_LIGHT: '#b7d1fa',
-              SOUTHERN_EUROPE_LIGHT: '#feb3f0',
-              CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST_LIGHT: '#b7e1c1',
-
-              NOFILL: 'grey',
-              defaultFill: 'white'
-          }, 
-      });
-
-var where = "";
-var country = "";
-updateMap(where, country, regionHighlighted, false);
-
-function updateMap(region, country, regionHighlighted, reset) {
-      var countryFill = getFillKey(region);
-
-      d3.csv("regions.csv", function(error, data) {
-      // normal map; specific region was not clicked
-      if ((region == "") || (reset == true) || (region == regionHighlighted.region)) {
-        console.log("region:-updateMap " + region);
-        console.log("highlighted-updateMap: " + regionHighlighted.region);
-        if (region == regionHighlighted.region) {
-          updateDotsByRegion("none", dot);
-        }
-        for (var i = 0; i < data.length; i++) { 
-          data[i].fillKey = getFillKey(data[i].Region);
-
-          data[ data[i].ISO] = data[i] ;
-          delete  data[i].ISO;
-          delete  data[i] ;
-        }
+      var select = d3.select(this).attr("class");
+      if ((select == "unselected") || (select == "start_selection")) {
         regionHighlighted.highlighted = false;
-        regionHighlighted.region = "none"; 
+        updateMap(d.region, country, regionHighlighted, false);
 
-      } else { // highlight a specific region
-        for (var i = 0; i < data.length; i++) { 
-            data[i].fillKey = {};
-            if (data[i].Region == region) {
-              data[i].fillKey = getFillKey(region);
-              if (data[i].Country == country){
-                data[i].fillKey = countryFill;
-              }
-            } else {   
-            // decrease saturation for all other regions         
-             data[i].fillKey = getLightFillKey(data[i].Region);
-            }
+        dot.style("opacity", 0.2);
+        d3.select(this)
+          .style("opacity", 1)
+          .attr("class", "selected");
+        } else {
+          regionHighlighted.highlighted = true;
+          updateMap(d.region, country, regionHighlighted, true);
+          dot.style("opacity", 1);
+          d3.select(this)
+            .attr("class", "unselected");
+        } 
+    }
+
+    // link map with dots
+    function updateDotsByRegion(region, dot) {
+      console.log("updating dots!");
+      if (region != "none") {
+        console.log("changing region!");
+        dot.style("opacity", function(d) {
+          var location = color(d);
+          if (location != region) {
+            return 0.2;
+          }
+        })
+      } else {
+        console.log("region set!!");
+
+        dot.style("opacity", 1);
+      }
+    }
+
+    // Add an overlay for the year label.
+    var box = label.node().getBBox();
+
+    var overlay = svg.append("rect")
+          .attr("class", "overlay")
+          .attr("x", box.x)
+          .attr("y", 350)
+          .attr("width", box.width)
+          .attr("height", box.height)
+          .on("mouseover", enableInteraction);
+
+    // Start a transition that interpolates the data based on year.
+    svg.transition()
+        .duration(10000)
+        .ease("linear")
+        .tween("year", tweenYear)
+        .each("end", enableInteraction);
+
+    // Positions the dots based on data.
+    function position(dot) {
+      dot .attr("cx", function(d) { return xScale(x(d)); })
+          .attr("cy", function(d) { return yScale(y(d)); })
+          .attr("r", function(d) { return radiusScale(radius(d)); });
+    }
+
+    // Defines a sort order so that the smallest dots are drawn on top.
+    function order(a, b) {
+      return radius(b) - radius(a);
+    }
+
+    // After the transition finishes, you can mouseover to change the year.
+    function enableInteraction() {
+      var yearScale = d3.scale.linear()
+          .domain([2007, 2015])
+          .range([box.x + 10, box.x + box.width - 10])
+          .clamp(true);
+
+      // Cancel the current transition, if any.
+      svg.transition().duration(0);
+
+      overlay
+          .on("mouseover", mouseover)
+          .on("mouseout", mouseout)
+          .on("mousemove", mousemove)
+          .on("touchmove", mousemove);
+
+      function mouseover() {
+        label.classed("active", true);
+      }
+
+      function mouseout() {
+        label.classed("active", false);
+      }
+
+      function mousemove() {
+        displayYear(yearScale.invert(d3.mouse(this)[0]));
+      }
+    }
+
+    // Tweens the entire chart by first tweening the year, and then the data.
+    // For the interpolated data, the dots and label are redrawn.
+    function tweenYear() {
+      var year = d3.interpolateNumber(2007, 2015);
+      return function(t) { displayYear(year(t)); };
+    }
+
+    // Updates the display to show the specified year.
+    function displayYear(year) {
+      dot.data(interpolateData(year), key).call(position).sort(order);
+      label.text(Math.round(year));
+    }
+
+    // Interpolates the dataset for the given (fractional) year.
+    function interpolateData(year) {
+      return nations.map(function(d) {
+        return {
+          language: d.language,
+          region: d.region,
+          articles: interpolateValues(d.articles, year),
+          speakers: interpolateValues(d.speakers, year),
+          users: interpolateValues(d.users, year)
+        };
+      });
+    }
+
+    // Finds (and possibly interpolates) the value for the specified year.
+    function interpolateValues(values, year) {
+      var i = bisect.left(values, year, 0, values.length - 1),
+          a = values[i];
+      if (i > 0) {
+        var b = values[i - 1],
+            t = (year - a[0]) / (b[0] - a[0]);
+        
+        var v = a[1] * (1 - t) + b[1] * t
+        return v;
+      }
+      return a[1];
+    }
+
+   function updateMap(region, country, regionHighlighted, reset) {
+        var countryFill = getFillKey(region);
+
+        d3.csv("regions.csv", function(error, data) {
+        // normal map; specific region was not clicked
+        if ((region == "") || (reset == true) || (region == regionHighlighted.region)) {
+          console.log("region:-updateMap " + region);
+          console.log("highlighted-updateMap: " + regionHighlighted.region);
+          if (region == regionHighlighted.region) {
+            updateDotsByRegion("none", dot);
+          }
+          for (var i = 0; i < data.length; i++) { 
+            data[i].fillKey = getFillKey(data[i].Region);
 
             data[ data[i].ISO] = data[i] ;
-
             delete  data[i].ISO;
             delete  data[i] ;
-        }  
-        regionHighlighted.highlighted = true;
-        regionHighlighted.region = region;      
-        //data[country].fillKey = countryFill;
+          }
+          regionHighlighted.highlighted = false;
+          regionHighlighted.region = "none"; 
+
+        } else { // highlight a specific region
+          for (var i = 0; i < data.length; i++) { 
+              data[i].fillKey = {};
+              if (data[i].Region == region) {
+                data[i].fillKey = getFillKey(region);
+                if (data[i].Country == country){
+                  data[i].fillKey = countryFill;
+                }
+              } else {   
+              // decrease saturation for all other regions         
+               data[i].fillKey = getLightFillKey(data[i].Region);
+              }
+
+              data[ data[i].ISO] = data[i] ;
+
+              delete  data[i].ISO;
+              delete  data[i] ;
+          }  
+          regionHighlighted.highlighted = true;
+          regionHighlighted.region = region;      
+          //data[country].fillKey = countryFill;
+        }
+        map.updateChoropleth(data, {reset: true});
       }
-      map.updateChoropleth(data, {reset: true});
-    }
-  );
-}
+    );
+  }   
 
-function getFillKey(region) {
-  if (region == 'Africa') { return 'AFRICA'; }
-  if (region == 'North America') { return 'NORTH_AMERICA'; }
-  if (region == 'South America') { return 'SOUTH_AMERICA'; }
-  if (region == 'East Asia') { return 'EAST_ASIA'; }
-  if (region == 'Southeast Asia') { return 'SOUTHEAST_ASIA'; }
-  if (region == 'South Asia') { return 'SOUTH_ASIA'; }
-  if (region == 'Oceania') { return 'OCEANIA'; }
-  if (region == 'Caribbean') {  return'CARIBBEAN'; }
-  if (region == 'Eastern Europe') { return 'EASTERN_EUROPE'; }
-  if (region == 'Western Europe') { return 'WESTERN_EUROPE'; }
-  if (region == 'Northern Europe') { return 'NORTHERN_EUROPE'; }
-  if (region == 'Southern Europe') { return 'SOUTHERN_EUROPE'; }
-  if (region == 'Caucasus, Central Asia & Middle East') { return 'CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST'; }  
-}
+  var map = new Datamap({
+      element: document.getElementById('container'),
+      done: function(map) {
+        map.svg.selectAll('.datamaps-subunit').on('click', function(geo) {
+          var localData = map.options.data[geo.id];
+          var country = geo.id;
+          var region = "";
+          if ( localData && localData.Region ) {
+            region = localData.Region;
+            updateMap(region, localData.Country, regionHighlighted, false);
+            updateDotsByRegion(region, dot);
+          }
+        })
+      },
+      geographyConfig: {
+        borderWidth: 0.3,
+        popupTemplate: function(geo, data) {
+              return ['<div class="hoverinfo"><strong>',
+                      ' ' + geo.properties.name,
+                      ': ' + data.Region,
+                      '</strong></div>'].join('');
+          }
+        },
+        fills: {
+            AFRICA: '#ffafdf',
+            NORTH_AMERICA: '#2239ad',
+            SOUTH_AMERICA: 'green',
+            EAST_ASIA: '#f44e4e',
+            SOUTHEAST_ASIA: 'purple',
+            SOUTH_ASIA: '#f97b04',
+            OCEANIA: '#f1f747',
+            CARIBBEAN: '#c17eea',
+            EASTERN_EUROPE: '#00dbef',
+            WESTERN_EUROPE: '#893046',
+            NORTHERN_EUROPE: '#4286f4',
+            SOUTHERN_EUROPE: '#db02b3',
+            CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST: '#66c17d',
 
-function getLightFillKey(region) {
-  if (region == 'Africa') { return 'AFRICA_LIGHT'; }
-  if (region == 'North America') { return 'NORTH_AMERICA_LIGHT'; }
-  if (region == 'South America') { return 'SOUTH_AMERICA_LIGHT'; }
-  if (region == 'East Asia') { return 'EAST_ASIA_LIGHT'; }
-  if (region == 'Southeast Asia') { return 'SOUTHEAST_ASIA_LIGHT'; }
-  if (region == 'South Asia') { return 'SOUTH_ASIA_LIGHT'; }
-  if (region == 'Oceania') { return 'OCEANIA_LIGHT'; }
-  if (region == 'Caribbean') {  return'CARIBBEAN_LIGHT'; }
-  if (region == 'Eastern Europe') { return 'EASTERN_EUROPE_LIGHT'; }
-  if (region == 'Western Europe') { return 'WESTERN_EUROPE_LIGHT'; }
-  if (region == 'Northern Europe') { return 'NORTHERN_EUROPE_LIGHT'; }
-  if (region == 'Southern Europe') { return 'SOUTHERN_EUROPE_LIGHT'; }
-  if (region == 'Caucasus, Central Asia & Middle East') { return 'CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST_LIGHT'; }  
-}
+            AFRICA_LIGHT: '#ffe6f5',
+            NORTH_AMERICA_LIGHT: '#bec9f3',
+            SOUTH_AMERICA_LIGHT: '#ccffcc',
+            EAST_ASIA_LIGHT: '#fccfcf',
+            SOUTHEAST_ASIA_LIGHT: '#ffb3ff',
+            SOUTH_ASIA_LIGHT: '#fed8b4',
+            OCEANIA_LIGHT: '#fbfdce',
+            CARIBBEAN_LIGHT: '#ead3f8',
+            EASTERN_EUROPE_LIGHT: '#ccfbff',
+            WESTERN_EUROPE_LIGHT: '#e4b4c1',
+            NORTHERN_EUROPE_LIGHT: '#b7d1fa',
+            SOUTHERN_EUROPE_LIGHT: '#feb3f0',
+            CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST_LIGHT: '#b7e1c1',
 
-});
+            NOFILL: 'grey',
+            defaultFill: 'white'
+        }, 
+    });
+
+  var where = "";
+  var country = "";
+  updateMap(where, country, regionHighlighted, false);
+
+
+  function getFillKey(region) {
+    if (region == 'Africa') { return 'AFRICA'; }
+    if (region == 'North America') { return 'NORTH_AMERICA'; }
+    if (region == 'South America') { return 'SOUTH_AMERICA'; }
+    if (region == 'East Asia') { return 'EAST_ASIA'; }
+    if (region == 'Southeast Asia') { return 'SOUTHEAST_ASIA'; }
+    if (region == 'South Asia') { return 'SOUTH_ASIA'; }
+    if (region == 'Oceania') { return 'OCEANIA'; }
+    if (region == 'Caribbean') {  return'CARIBBEAN'; }
+    if (region == 'Eastern Europe') { return 'EASTERN_EUROPE'; }
+    if (region == 'Western Europe') { return 'WESTERN_EUROPE'; }
+    if (region == 'Northern Europe') { return 'NORTHERN_EUROPE'; }
+    if (region == 'Southern Europe') { return 'SOUTHERN_EUROPE'; }
+    if (region == 'Caucasus, Central Asia & Middle East') { return 'CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST'; }  
+  }
+
+  function getLightFillKey(region) {
+    if (region == 'Africa') { return 'AFRICA_LIGHT'; }
+    if (region == 'North America') { return 'NORTH_AMERICA_LIGHT'; }
+    if (region == 'South America') { return 'SOUTH_AMERICA_LIGHT'; }
+    if (region == 'East Asia') { return 'EAST_ASIA_LIGHT'; }
+    if (region == 'Southeast Asia') { return 'SOUTHEAST_ASIA_LIGHT'; }
+    if (region == 'South Asia') { return 'SOUTH_ASIA_LIGHT'; }
+    if (region == 'Oceania') { return 'OCEANIA_LIGHT'; }
+    if (region == 'Caribbean') {  return'CARIBBEAN_LIGHT'; }
+    if (region == 'Eastern Europe') { return 'EASTERN_EUROPE_LIGHT'; }
+    if (region == 'Western Europe') { return 'WESTERN_EUROPE_LIGHT'; }
+    if (region == 'Northern Europe') { return 'NORTHERN_EUROPE_LIGHT'; }
+    if (region == 'Southern Europe') { return 'SOUTHERN_EUROPE_LIGHT'; }
+    if (region == 'Caucasus, Central Asia & Middle East') { return 'CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST_LIGHT'; }  
+  }
+
+
+  });
+}
+ 
 
 </script>
 
