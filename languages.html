@@ -14,9 +14,19 @@
   width: 90%;
   position: relative;
 }
+
 #chart {
   margin-left: -40px;
   height: 506px;
+/*  position: relative;
+  float: left;
+  display: inline-block;*/
+}
+
+#chartScale {
+/*  position: relative;
+  float: right;
+  display: inline-block;*/
 }
 
 #container, #map {
@@ -80,28 +90,26 @@ text {
 <body>
 <h1>The Languages of Wikipedia</h1>
 
-<p id="chart"></p>
-
-<aside>Mouseover the bottom of the year to move forward and backwards through time. Click on a map region to highlight the corresponding languages on the graph.</aside>
-<p class="attribution">Source: <a href="https://meta.wikimedia.org/wiki/List_of_Wikipedias/Table">Wikipedia metadata</a>
-
-<div id = "chartScale"> 
-  <input type="radio" name="scale" value="log-full" onclick="changeScale(value)" checked> Logarithmic <br>
-  <input type="radio" name="scale" value="log-zoom" onclick="changeScale(value)"> Logarithmic: zoomed <br>
-  <input type="radio" name="scale" value="linear-full" onclick="changeScale(value)"> Linear <br>
-  <input type="radio" name="scale" value="linear-zoom" onclick="changeScale(value)"> Linear: zoomed <br>
-  <input type="radio" name="scale" value="linear-more-zoomed" onclick="changeScale(value)"> Linear: more zoomed <br>
-  <input type="radio" name="scale" value="linear-super-zoomed" onclick="changeScale(value)"> Linear: super zoomed <br>
+<div id = "chartAndScale">
+  <div id="chart"></div>
+  <div id = "chartScale"> 
+    <input type="radio" name="scale" value="log-full" onclick="changeScale(value)" checked> Logarithmic <br>
+    <input type="radio" name="scale" value="linear-full" onclick="changeScale(value)"> Linear <br>
+    <input type="radio" name="scale" value="linear-zoom" onclick="changeScale(value)"> Linear: zoomed <br>
+    <input type="radio" name="scale" value="linear-more-zoomed" onclick="changeScale(value)"> Linear: more zoomed <br>
+    <input type="radio" name="scale" value="linear-super-zoomed" onclick="changeScale(value)"> Linear: super zoomed <br>
+  </div>
 </div>
 
+<aside>Mouseover the bottom of the year to move forward and backwards through time. Click on a map region to highlight the corresponding languages on the graph or vice versa.</aside>
+<p class="attribution">Source: <a href="https://meta.wikimedia.org/wiki/List_of_Wikipedias/Table">Wikipedia metadata</a>
 
 <div id="container">
   <div id="map"> </div>
 </div>
 
-
 <div id="description"
-<p>The languages you speak vastly affect the information you have access to. This visualization of languages supported by Wikipedia shows the dynamic fluctuation in Wikipedia articles (<i>x</i>), users (<i>y</i>) and speakers (radius) of over 200 languages over the past 9 years. Languages are colored by geographic region; when they are spoken in multiple regions, e.g. Spanish, they are colored by where they originated. Mouseover to see more information!
+<p>The languages you speak vastly affect the information you have access to. This visualization of languages supported by Wikipedia shows the dynamic fluctuation in Wikipedia articles (<i>x</i>), users (<i>y</i>) and speakers (radius) of over 200 languages over the past 9 years. Languages are colored by geographic region; languages such as English or Spanish, which are spoken in multiple regions, are colored by where they originated. Mouseover to see more information!
 
 <p>The data for this visualization was collected from <a href="https://meta.wikimedia.org/wiki/List_of_Wikipedias/Table">Wikipedia metadata</a> and research. 
 
@@ -136,8 +144,8 @@ function changeScale(value) {
   setUpChart(value);
 }
 
-// whether or not a region is currently highlighted
-var regionHighlighted = { 
+// what is currently is currently highlighted
+var currentlyHighlighted = { 
   highlighted: false,
   region : "none",
   language: "none"
@@ -147,38 +155,40 @@ setUpChart("log-full");
 
 function setUpChart(scale) {
   // Chart dimensions.
-  var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 39.5},
+  var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 59},
       width = 960 - margin.right,
       height = 500 - margin.top - margin.bottom;
+
+  // The x & y axes.
+  var xAxis, yAxis;
 
   if (scale == "linear-full") {
   // Various scales. These domains make assumptions of data, naturally.
     xScale = d3.scale.linear().domain([100, 6000000]).range([0, width]),
     yScale = d3.scale.linear().domain([100, 30000000]).range([height, 0]);
+    yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(6, ",f");
   } else if (scale == "linear-zoom") {
     xScale = d3.scale.linear().domain([100, 2000000]).range([0, width]),
     yScale = d3.scale.linear().domain([100, 3000000]).range([height, 0]);
+    yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(6, ",f");
   } else if (scale == "linear-more-zoomed") {
     xScale = d3.scale.linear().domain([100, 500000]).range([0, width]),
     yScale = d3.scale.linear().domain([100, 500000]).range([height, 0]);
+    yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(6, ",f");
   } else if (scale == "linear-super-zoomed") {
     xScale = d3.scale.linear().domain([100, 100000]).range([0, width]),
     yScale = d3.scale.linear().domain([100, 100000]).range([height, 0]);
-  } else if (scale == "log-zoom") {
-    xScale = d3.scale.log().domain([100, 2000000]).range([0, width]),
-    yScale = d3.scale.log().domain([100, 3000000]).range([height, 0]);
+    yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(6, ",f");
   } else { // log-full
     xScale = d3.scale.log().domain([100, 6000000]).range([0, width]),
     yScale = d3.scale.log().domain([100, 30000000]).range([height, 0]);
+    yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(12, ",f");
   }
 
-  radiusScale = d3.scale.sqrt().domain([0, 1200294060 ]).range([0, 100]),
+  xAxis = d3.svg.axis().orient("bottom").scale(xScale).ticks(12, ",f");
+
+  radiusScale = d3.scale.sqrt().domain([0, 1200294060 ]).range([0, 120]),
   colorScale = d3.scale.category10();
-
-
-  // The x & y axes.
-  var xAxis = d3.svg.axis().orient("bottom").scale(xScale).ticks(12, d3.format(",d")),
-      yAxis = d3.svg.axis().scale(yScale).orient("left");
 
   // Create the SVG container and set the origin.
    svg = d3.select("#chart").append("svg")
@@ -240,7 +250,7 @@ function makeChart (scale) {
           var region = "";
           if ( localData && localData.Region ) {
             region = localData.Region;
-            updateMap(region, localData.Country, regionHighlighted, false, false);
+            updateMap(region, localData.Country, currentlyHighlighted, false, false);
             updateDotsByRegion(region, dot, 1);
           }
         })
@@ -326,33 +336,33 @@ function makeChart (scale) {
     // Add a title.
     dot.append("title")
         .text(function(d) { 
-          var text = d.language + "\nSpeakers: " + d.speakers + "\nArticles: " + d.articles + 
-          "\nUsers: " + d.users + "\nRegion: " + d.region;
+          var text = d.language;
           return text });
 
+    // Change opacity of dots and map based on which one you clicked
     function clicked(d, i) {
       dot.style("stroke-width", 1)
       var select = d3.select(this).attr("class");
-      var sameRegion = (d.region == regionHighlighted.region);
-      var sameLanguage = (regionHighlighted.language == d.language);
+      var sameRegion = (d.region == currentlyHighlighted.region);
+      var sameLanguage = (currentlyHighlighted.language == d.language);
 
       if ((select == "unselected") || (select == "start_selection")) {
-        regionHighlighted.highlighted = false;
-        regionHighlighted.language = d.language;
+        currentlyHighlighted.highlighted = false;
+        currentlyHighlighted.language = d.language;
 
-        updateMap(d.region, country, regionHighlighted, sameRegion, sameLanguage);
+        updateMap(d.region, country, currentlyHighlighted, sameRegion, sameLanguage);
 
         dot.style("opacity", 0.15);
         dot.attr("class", "unselected");
-        updateDotsByRegion(d.region, dot, 0.6);
-        
+        updateDotsByRegion(d.region, dot, 0.7);
+
         d3.select(this)
           .style("opacity", 1)
           .style("stroke-width", 2)
           .attr("class", "selected");
       } else {
-          regionHighlighted.highlighted = true;
-          updateMap(d.region, country, regionHighlighted, sameRegion, sameLanguage);
+          currentlyHighlighted.highlighted = true;
+          updateMap(d.region, country, currentlyHighlighted, sameRegion, sameLanguage);
           dot.style("opacity", 1);
           d3.select(this).attr("class", "unselected");
         } 
@@ -387,7 +397,7 @@ function makeChart (scale) {
 
     // Start a transition that interpolates the data based on year.
     svg.transition()
-        .duration(10000)
+        .duration(8000)
         .ease("linear")
         .tween("year", tweenYear)
         .each("end", enableInteraction);
@@ -473,15 +483,13 @@ function makeChart (scale) {
       return a[1];
     }
 
-   function updateMap (region, country, regionHighlighted, sameRegion, sameLanguage) {
-        console.log(sameRegion);
-        console.log(sameLanguage);
+   function updateMap (region, country, currentlyHighlighted, sameRegion, sameLanguage) {
         var countryFill = getFillKey(region);
 
         d3.csv("regions.csv", function(error, data) {
         // normal map; no highlighting of a specific region
-        if (((region == "") || (region == regionHighlighted.region) && (sameRegion == false)) || sameLanguage) {
-          if (region == regionHighlighted.region) {
+        if (((region == "") || (region == currentlyHighlighted.region) && (sameRegion == false)) || sameLanguage) {
+          if (region == currentlyHighlighted.region) {
             updateDotsByRegion("none", dot, 1);
           }
           for (var i = 0; i < data.length; i++) { 
@@ -491,8 +499,8 @@ function makeChart (scale) {
             delete  data[i].ISO;
             delete  data[i] ;
           }
-          regionHighlighted.highlighted = false;
-          regionHighlighted.region = "none"; 
+          currentlyHighlighted.highlighted = false;
+          currentlyHighlighted.region = "none"; 
         // highlight a specific region
         } else { 
           for (var i = 0; i < data.length; i++) { 
@@ -512,8 +520,8 @@ function makeChart (scale) {
               delete  data[i].ISO;
               delete  data[i] ;
           }  
-          regionHighlighted.highlighted = true;
-          regionHighlighted.region = region;      
+          currentlyHighlighted.highlighted = true;
+          currentlyHighlighted.region = region;      
         }
         map.updateChoropleth(data, {reset: true});
       }
@@ -522,7 +530,7 @@ function makeChart (scale) {
 
   var where = "";
   var country = "";
-  updateMap(where, country, regionHighlighted, false, false);
+  updateMap(where, country, currentlyHighlighted, false, false);
 
   function getFillKey(region) {
     if (region == 'Africa') { return 'AFRICA'; }
@@ -558,13 +566,7 @@ function makeChart (scale) {
   });
 }
  
-
 </script>
-
-<script>
-     
-
-  </script>
 
 <script>
 
