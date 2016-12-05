@@ -167,24 +167,24 @@ function setUpChart(scale) {
 
   if (scale == "linear-full") {
   // Various scales. These domains make assumptions of data, naturally.
-    xScale = d3.scale.linear().domain([100, 6000000]).range([0, width]),
-    yScale = d3.scale.linear().domain([100, 30000000]).range([height, 0]);
+    xScale = d3.scale.linear().domain([0, 6000000]).range([0, width]),
+    yScale = d3.scale.linear().domain([0, 30000000]).range([height, 0]);
     yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(6, ",f");
   } else if (scale == "linear-zoom") {
-    xScale = d3.scale.linear().domain([100, 2000000]).range([0, width]),
-    yScale = d3.scale.linear().domain([100, 3000000]).range([height, 0]);
+    xScale = d3.scale.linear().domain([0, 2000000]).range([0, width]),
+    yScale = d3.scale.linear().domain([0, 3000000]).range([height, 0]);
     yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(6, ",f");
   } else if (scale == "linear-more-zoomed") {
-    xScale = d3.scale.linear().domain([100, 500000]).range([0, width]),
-    yScale = d3.scale.linear().domain([100, 500000]).range([height, 0]);
+    xScale = d3.scale.linear().domain([0, 500000]).range([0, width]),
+    yScale = d3.scale.linear().domain([0, 500000]).range([height, 0]);
     yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(6, ",f");
   } else if (scale == "linear-really-zoomed") {
-    xScale = d3.scale.linear().domain([100, 100000]).range([0, width]),
-    yScale = d3.scale.linear().domain([100, 100000]).range([height, 0]);
+    xScale = d3.scale.linear().domain([0, 100000]).range([0, width]),
+    yScale = d3.scale.linear().domain([0, 100000]).range([height, 0]);
     yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(6, ",f");
   } else if (scale == "linear-super-zoomed") {
-    xScale = d3.scale.linear().domain([10, 20000]).range([0, width]),
-    yScale = d3.scale.linear().domain([10, 20000]).range([height, 0]);
+    xScale = d3.scale.linear().domain([0, 20000]).range([0, width]),
+    yScale = d3.scale.linear().domain([0, 20000]).range([height, 0]);
     yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(6, ",f");
   } else { // log-full
     xScale = d3.scale.log().domain([100, 6000000]).range([0, width]),
