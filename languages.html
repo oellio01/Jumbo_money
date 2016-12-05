@@ -293,7 +293,6 @@ function makeChart (scale) {
           }
           currentlyHighlighted.language = "none";
           d3.select("#display_box").style("display", "none");
-          // console.log(currentlyHighlighted.language);
         })
       },
       geographyConfig: {
@@ -305,7 +304,6 @@ function makeChart (scale) {
                       ': ' + data.Region,
                       '</strong></div>'].join('');
         },
-        //popupOnHover: true,
         highlightOnHover: true,
         highlightFillColor: 'rgba(122, 122, 122, 0.4)',
         highlightBorderColor: 'grey',
@@ -395,6 +393,7 @@ function makeChart (scale) {
         year = curryear - 2007;
 
         document.getElementById("display_box").innerHTML = nations[i].language + "<br>Speakers: " + numberWithCommas(nations[i].speakers[year][1]) + "<br>Articles: " + numberWithCommas(nations[i].articles[year][1]) + "<br>Users: " + numberWithCommas(nations[i].users[year][1]) + "<br>Region: " + nations[i].region;
+      d3.select("#display_box").style("display", "block");
     }
 
       function update_display(){
@@ -418,10 +417,7 @@ function makeChart (scale) {
       if ((select == "unselected") || (select == "start_selection")) {
         currentlyHighlighted.highlighted = false;
         currentlyHighlighted.language = d.language;
-        console.log(currentlyHighlighted.language);
-
         updateMap(d.region, country, sameRegion, sameLanguage);
-
         dot.style("opacity", 0.15);
         dot.attr("class", "unselected");
         updateDotsByRegion(d.region, dot, 0.7);
@@ -435,9 +431,6 @@ function makeChart (scale) {
           updateMap(d.region, country, sameRegion, sameLanguage);
           currentlyHighlighted.language = "none";
           d3.select("#display_box").style("display", "none");
-
-          console.log(currentlyHighlighted.language);
-
           dot.style("opacity", 1);
           d3.select(this).attr("class", "unselected");
         } 
