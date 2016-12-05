@@ -383,17 +383,21 @@ function makeChart (scale) {
         .text(function(d) { 
           var text = d.language;
           return text });
-      
+ 
+    function numberWithCommas(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
       function display_data(d, i){
         year = curryear - 2007;
-        document.getElementById("display_box").innerHTML = nations[i].language + "<br>Speakers: " + nations[i].speakers[year][1] + "<br>Articles: " + nations[i].articles[year][1] + "<br>Users: " + nations[i].users[year][1] + "<br>Region: " + nations[i].region;
+        document.getElementById("display_box").innerHTML = nations[i].language + "<br>Speakers: " + numberWithCommas(nations[i].speakers[year][1]) + "<br>Articles: " + numberWithCommas(nations[i].articles[year][1]) + "<br>Users: " + numberWithCommas(nations[i].users[year][1]) + "<br>Region: " + nations[i].region;
     }
 
       function update_display(){
           year = curryear - 2007;
           for (i = 0; i < nations.length; i++){
               if(nations[i].language == currentlyHighlighted.language){
-                  document.getElementById("display_box").innerHTML = nations[i].language + "<br>Speakers: " + nations[i].speakers[year][1] + "<br>Articles: " + nations[i].articles[year][1] + "<br>Users: " + nations[i].users[year][1] + "<br>Region: " + nations[i].region;
+                  document.getElementById("display_box").innerHTML = nations[i].language + "<br>Speakers: " + numberWithCommas(nations[i].speakers[year][1]) + "<br>Articles: " + numberWithCommas(nations[i].articles[year][1]) + "<br>Users: " + numberWithCommas(nations[i].users[year][1]) + "<br>Region: " + nations[i].region;
               }
           }
       }
