@@ -27,9 +27,13 @@ html {
 
 .ocks-org h1,
 .ocks-org h2,
-.ocks-org h3,
 .ocks-org h4 {
   color: #000;
+}
+
+.ocks-org h3 {
+  color: #AAAAAA;
+  font-weight: normal;
 }
 
 .ocks-org header,
@@ -44,11 +48,11 @@ h1 {
   margin: .3em 0 .1em 0;
 }
 
-h2 {
+h2, h3 {
   margin-top: 2em;
 }
 
-h1, h2 {
+h1, h2, h3 {
   text-rendering: optimizeLegibility;
 }
 

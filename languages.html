@@ -53,6 +53,10 @@ text {
   font-family: "PT Serif", serif;
 }
 
+#subtitle {
+  margin-top: -10px;
+}
+
 .dot {
   stroke: #000;
 }
@@ -102,7 +106,8 @@ text {
 </header>
 
 <body>
-<h1>The Languages of Wikipedia</h1>
+<h1>Wikipedia Language Accessibility</h1>
+<h3 id="subtitle">How has Wikipedia in each language grown over time?</h3>
 
 <div id = "chartAndScale">
   <div id="chart"></div>
@@ -273,19 +278,26 @@ function makeChart (scale) {
             updateDotsByRegion(region, dot, 1);
           }
           currentlyHighlighted.language = "none";
-          console.log(currentlyHighlighted.language);
+          // console.log(currentlyHighlighted.language);
         })
       },
       geographyConfig: {
-        borderWidth: 0.3,
+        borderWidth: 0.1,
+        borderOpacity: 0,
         popupTemplate: function(geo, data) {
               return ['<div class="hoverinfo"><strong>',
                       ' ' + geo.properties.name,
                       ': ' + data.Region,
                       '</strong></div>'].join('');
-          }
         },
-        fills: {
+        //popupOnHover: true,
+        highlightOnHover: true,
+        highlightFillColor: 'rgba(122, 122, 122, 0.4)',
+        highlightBorderColor: 'grey',
+        highlightBorderWidth: 0.1,
+        highlightBorderOpacity: 0
+      },
+      fills: {
             AFRICA: '#ffafdf',
             NORTH_AMERICA: '#2239ad',
             SOUTH_AMERICA: 'green',
@@ -594,12 +606,3 @@ function makeChart (scale) {
 }
  
 </script>
-
-<script>
-
-GoogleAnalyticsObject = "ga", ga = function() { ga.q.push(arguments); }, ga.q = [], ga.l = +new Date;
-ga("create", "UA-48272912-3", "ocks.org");
-ga("send", "pageview");
-
-</script>
-<script async src="//www.google-analytics.com/analytics.js"></script>
