@@ -152,6 +152,7 @@ function key(d) { return d.language; }
 // whether the chart is set to a linear or logarithmic scale
 var scale = "log-full";
 function changeScale(value) {
+  // redraw chart and map
   d3.select("svg").remove();
   document.getElementById("map").remove();
   document.getElementById("container").innerHTML += '<div id="map">';
@@ -159,7 +160,7 @@ function changeScale(value) {
 }
 
 // what is currently is currently highlighted
-var currentlyHighlighted = { 
+currentlyHighlighted = { 
   highlighted: false,
   region : "none",
   language: "none"
@@ -178,20 +179,24 @@ function setUpChart(scale) {
 
   if (scale == "linear-full") {
   // Various scales. These domains make assumptions of data, naturally.
-    xScale = d3.scale.linear().domain([100, 6000000]).range([0, width]),
-    yScale = d3.scale.linear().domain([100, 30000000]).range([height, 0]);
+    xScale = d3.scale.linear().domain([0, 6000000]).range([0, width]),
+    yScale = d3.scale.linear().domain([0, 30000000]).range([height, 0]);
     yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(6, ",f");
   } else if (scale == "linear-zoom") {
-    xScale = d3.scale.linear().domain([100, 2000000]).range([0, width]),
-    yScale = d3.scale.linear().domain([100, 3000000]).range([height, 0]);
+    xScale = d3.scale.linear().domain([0, 2000000]).range([0, width]),
+    yScale = d3.scale.linear().domain([0, 3000000]).range([height, 0]);
     yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(6, ",f");
   } else if (scale == "linear-more-zoomed") {
-    xScale = d3.scale.linear().domain([100, 500000]).range([0, width]),
-    yScale = d3.scale.linear().domain([100, 500000]).range([height, 0]);
+    xScale = d3.scale.linear().domain([0, 500000]).range([0, width]),
+    yScale = d3.scale.linear().domain([0, 500000]).range([height, 0]);
+    yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(6, ",f");
+  } else if (scale == "linear-really-zoomed") {
+    xScale = d3.scale.linear().domain([0, 100000]).range([0, width]),
+    yScale = d3.scale.linear().domain([0, 100000]).range([height, 0]);
     yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(6, ",f");
   } else if (scale == "linear-super-zoomed") {
-    xScale = d3.scale.linear().domain([100, 100000]).range([0, width]),
-    yScale = d3.scale.linear().domain([100, 100000]).range([height, 0]);
+    xScale = d3.scale.linear().domain([0, 20000]).range([0, width]),
+    yScale = d3.scale.linear().domain([0, 20000]).range([height, 0]);
     yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(6, ",f");
   } else { // log-full
     xScale = d3.scale.log().domain([100, 6000000]).range([0, width]),
@@ -205,7 +210,7 @@ function setUpChart(scale) {
   colorScale = d3.scale.category10();
 
   // Create the SVG container and set the origin.
-   svg = d3.select("#chart").append("svg")
+  svg = d3.select("#chart").append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
     .append("g")
@@ -254,7 +259,7 @@ function makeChart (scale) {
   // Load the data.
   d3.json("THEIRFORMAT.json", function(nations) {
 
-  // map of the world
+  // Map of the world
   var map = new Datamap({
       element: document.getElementById('map'),
       done: function(map) {
@@ -264,9 +269,11 @@ function makeChart (scale) {
           var region = "";
           if ( localData && localData.Region ) {
             region = localData.Region;
-            updateMap(region, localData.Country, currentlyHighlighted, false, false);
+            updateMap(region, localData.Country, false, false);
             updateDotsByRegion(region, dot, 1);
           }
+          currentlyHighlighted.language = "none";
+          console.log(currentlyHighlighted.language);
         })
       },
       geographyConfig: {
@@ -363,8 +370,9 @@ function makeChart (scale) {
       if ((select == "unselected") || (select == "start_selection")) {
         currentlyHighlighted.highlighted = false;
         currentlyHighlighted.language = d.language;
+        console.log(currentlyHighlighted.language);
 
-        updateMap(d.region, country, currentlyHighlighted, sameRegion, sameLanguage);
+        updateMap(d.region, country, sameRegion, sameLanguage);
 
         dot.style("opacity", 0.15);
         dot.attr("class", "unselected");
@@ -376,13 +384,17 @@ function makeChart (scale) {
           .attr("class", "selected");
       } else {
           currentlyHighlighted.highlighted = true;
-          updateMap(d.region, country, currentlyHighlighted, sameRegion, sameLanguage);
+          updateMap(d.region, country, sameRegion, sameLanguage);
+          currentlyHighlighted.language = "none";
+
+          console.log(currentlyHighlighted.language);
+
           dot.style("opacity", 1);
           d3.select(this).attr("class", "unselected");
         } 
     }
 
-    // link map with dots
+    // Link map with dots
     function updateDotsByRegion(region, dot, selectedOpacity) {
       if (region != "none") {
         dot.style("opacity", function(d) {
@@ -497,7 +509,7 @@ function makeChart (scale) {
       return a[1];
     }
 
-   function updateMap (region, country, currentlyHighlighted, sameRegion, sameLanguage) {
+   function updateMap (region, country, sameRegion, sameLanguage) {
         var countryFill = getFillKey(region);
 
         d3.csv("regions.csv", function(error, data) {
@@ -515,6 +527,7 @@ function makeChart (scale) {
           }
           currentlyHighlighted.highlighted = false;
           currentlyHighlighted.region = "none"; 
+
         // highlight a specific region
         } else { 
           for (var i = 0; i < data.length; i++) { 
@@ -535,7 +548,7 @@ function makeChart (scale) {
               delete  data[i] ;
           }  
           currentlyHighlighted.highlighted = true;
-          currentlyHighlighted.region = region;      
+          currentlyHighlighted.region = region;    
         }
         map.updateChoropleth(data, {reset: true});
       }
@@ -544,7 +557,7 @@ function makeChart (scale) {
 
   var where = "";
   var country = "";
-  updateMap(where, country, currentlyHighlighted, false, false);
+  updateMap(where, country, false, false);
 
   function getFillKey(region) {
     if (region == 'Africa') { return 'AFRICA'; }
