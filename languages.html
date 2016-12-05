@@ -171,6 +171,7 @@ function key(d) { return d.language; }
 // whether the chart is set to a linear or logarithmic scale
 var scale = "log-full";
 function changeScale(value) {
+  d3.select("#display_box").style("display", "none");
   // redraw chart and map
   d3.select("svg").remove();
   document.getElementById("map").remove();
@@ -392,7 +393,7 @@ function makeChart (scale) {
       function display_data(d, i){
         year = curryear - 2007;
 
-        document.getElementById("display_box").innerHTML = nations[i].language + "<br>Speakers: " + numberWithCommas(nations[i].speakers[year][1]) + "<br>Articles: " + numberWithCommas(nations[i].articles[year][1]) + "<br>Users: " + numberWithCommas(nations[i].users[year][1]) + "<br>Region: " + nations[i].region;
+        document.getElementById("display_box").innerHTML = "<b>" + nations[i].language + "</b>" + "<br>Speakers: " + numberWithCommas(nations[i].speakers[year][1]) + "<br>Articles: " + numberWithCommas(nations[i].articles[year][1]) + "<br>Users: " + numberWithCommas(nations[i].users[year][1]) + "<br>Region: " + nations[i].region;
       d3.select("#display_box").style("display", "block");
     }
 
@@ -400,7 +401,7 @@ function makeChart (scale) {
           year = curryear - 2007;
           for (i = 0; i < nations.length; i++){
               if(nations[i].language == currentlyHighlighted.language){
-                  document.getElementById("display_box").innerHTML = nations[i].language + "<br>Speakers: " + numberWithCommas(nations[i].speakers[year][1]) + "<br>Articles: " + numberWithCommas(nations[i].articles[year][1]) + "<br>Users: " + numberWithCommas(nations[i].users[year][1]) + "<br>Region: " + nations[i].region;
+                  document.getElementById("display_box").innerHTML = "<b>" + nations[i].language + "</b>"  + "<br>Speakers: " + numberWithCommas(nations[i].speakers[year][1]) + "<br>Articles: " + numberWithCommas(nations[i].articles[year][1]) + "<br>Users: " + numberWithCommas(nations[i].users[year][1]) + "<br>Region: " + nations[i].region;
               }
           }
       }
