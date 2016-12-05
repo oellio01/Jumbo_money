@@ -70,66 +70,6 @@ text {
 .datamaps-hoverover {display: none; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; } 
 .hoverinfo {padding: 4px; border-radius: 1px; background-color: #FFF; box-shadow: 1px 1px 5px #CCC; font-size: 12px; border: 1px solid #CCC; } 
 
-/* The switch - the box around the slider */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 60px;
-  height: 34px;
-}
-
-/* Hide default HTML checkbox */
-.switch input {display:none;}
-
-/* The slider */
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  -webkit-transition: .4s;
-  transition: .4s;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 26px;
-  width: 26px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
-}
-
-input:checked + .slider {
-  background-color: #2196F3;
-}
-
-input:focus + .slider {
-  box-shadow: 0 0 1px #2196F3;
-}
-
-input:checked + .slider:before {
-  -webkit-transform: translateX(26px);
-  -ms-transform: translateX(26px);
-  transform: translateX(26px);
-}
-
-/* Rounded sliders */
-.slider.round {
-  border-radius: 34px;
-}
-
-.slider.round:before {
-  border-radius: 50%;
-}
-
-
 </style>
 
 <header>
@@ -151,7 +91,7 @@ input:checked + .slider:before {
   <input type="radio" name="scale" value="linear-full" onclick="changeScale(value)"> Linear <br>
   <input type="radio" name="scale" value="linear-zoom" onclick="changeScale(value)"> Linear: zoomed <br>
   <input type="radio" name="scale" value="linear-more-zoomed" onclick="changeScale(value)"> Linear: more zoomed <br>
-  <input type="radio" name="scale" value="linear-super-zoomed" onclick="changeScale(value)"> Linear: more zoomed <br>
+  <input type="radio" name="scale" value="linear-super-zoomed" onclick="changeScale(value)"> Linear: super zoomed <br>
 </div>
 
 
@@ -300,7 +240,7 @@ function makeChart (scale) {
           if ( localData && localData.Region ) {
             region = localData.Region;
             updateMap(region, localData.Country, regionHighlighted, false);
-            updateDotsByRegion(region, dot);
+            updateDotsByRegion(region, dot, 1);
           }
         })
       },
@@ -390,32 +330,44 @@ function makeChart (scale) {
           return text });
 
     function clicked(d, i) {
-
+      dot.style("stroke-width", 1)
       var select = d3.select(this).attr("class");
-      if ((select == "unselected") || (select == "start_selection")) {
-        regionHighlighted.highlighted = false;
-        updateMap(d.region, country, regionHighlighted, false);
 
-        dot.style("opacity", 0.2);
+      if ((select == "unselected") || (select == "start_selection")) {
+        console.log(select);
+        regionHighlighted.highlighted = false;
+
+        if (d.region == regionHighlighted.region) {
+          updateMap(d.region, country, regionHighlighted, true);
+        } else {
+          updateMap(d.region, country, regionHighlighted, false);
+        }
+        dot.style("opacity", 0.15);
+        dot.attr("class", "unselected");
+        updateDotsByRegion(d.region, dot, 0.6);
         d3.select(this)
           .style("opacity", 1)
+          .style("stroke-width", 2)
           .attr("class", "selected");
-        } else {
+      } else {
+        console.log("selected!");
           regionHighlighted.highlighted = true;
           updateMap(d.region, country, regionHighlighted, true);
           dot.style("opacity", 1);
-          d3.select(this)
-            .attr("class", "unselected");
+          d3.select(this).attr("class", "unselected");
         } 
     }
 
     // link map with dots
-    function updateDotsByRegion(region, dot) {
+    function updateDotsByRegion(region, dot, selectedOpacity) {
+      console.log("updating dots by region!");
       if (region != "none") {
         dot.style("opacity", function(d) {
           var location = color(d);
           if (location != region) {
-            return 0.2;
+            return 0.15;
+          } else {
+            return selectedOpacity;
           }
         })
       } else {
@@ -522,14 +474,16 @@ function makeChart (scale) {
       return a[1];
     }
 
-   function updateMap (region, country, regionHighlighted, reset) {
+   function updateMap (region, country, regionHighlighted, sameRegion) {
         var countryFill = getFillKey(region);
 
         d3.csv("regions.csv", function(error, data) {
-        // normal map; specific region was not clicked
-        if ((region == "") || (reset == true) || (region == regionHighlighted.region)) {
+        // normal map; no highlighting of a specific region
+        if (((region == "") || (region == regionHighlighted.region)) && (sameRegion == false)) {
+          console.log(region);
+          console.log(regionHighlighted.region);
           if (region == regionHighlighted.region) {
-            updateDotsByRegion("none", dot);
+            updateDotsByRegion("none", dot, 1);
           }
           for (var i = 0; i < data.length; i++) { 
             data[i].fillKey = getFillKey(data[i].Region);
@@ -540,8 +494,9 @@ function makeChart (scale) {
           }
           regionHighlighted.highlighted = false;
           regionHighlighted.region = "none"; 
-
-        } else { // highlight a specific region
+        // highlight a specific region
+        } else { 
+          console.log("highlight specific region on map");
           for (var i = 0; i < data.length; i++) { 
               data[i].fillKey = {};
               if (data[i].Region == region) {
@@ -561,7 +516,6 @@ function makeChart (scale) {
           }  
           regionHighlighted.highlighted = true;
           regionHighlighted.region = region;      
-          //data[country].fillKey = countryFill;
         }
         map.updateChoropleth(data, {reset: true});
       }
@@ -571,7 +525,6 @@ function makeChart (scale) {
   var where = "";
   var country = "";
   updateMap(where, country, regionHighlighted, false);
-
 
   function getFillKey(region) {
     if (region == 'Africa') { return 'AFRICA'; }
@@ -604,8 +557,6 @@ function makeChart (scale) {
     if (region == 'Southern Europe') { return 'SOUTHERN_EUROPE_LIGHT'; }
     if (region == 'Caucasus, Central Asia & Middle East') { return 'CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST_LIGHT'; }  
   }
-
-
   });
 }
  
