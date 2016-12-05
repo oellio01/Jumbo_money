@@ -11,7 +11,8 @@
 <style>
 
 #description {
-  width: 90%;
+  width: 100%;
+  margin-top: 35px;
   position: relative;
   font-family: "PT Serif", serif;
 }
@@ -49,7 +50,6 @@
   display: block;
   float: left;
   margin-left: 30px;
-  margin-top: 10px;
   font-size: 12px;
   width: 300px;
 }
@@ -135,7 +135,6 @@ text {
 </div>
 
 <div id="instructions">Mouseover the bottom of the year to move forward and backwards through time. Click on a map region to highlight the corresponding languages on the graph or vice versa. Change the graph scale to better understand the distribution.</div>
-<p class="attribution">Source: <a href="https://meta.wikimedia.org/wiki/List_of_Wikipedias/Table">Wikipedia metadata</a>
 
 <div id="container">
   <div id="map"> </div>
@@ -148,6 +147,7 @@ text {
 
 <p>We were inspired by <a href="view-source:https://bost.ocks.org/mike/nations/">Mike Bostock's visualization of the Wealth and Health of Nations</a>, which in turn was based off of <a href="http://www.ted.com/talks/hans_rosling_shows_the_best_stats_you_ve_ever_seen.html">Hans Rosling's 2006 TED talk. </a>
 </div>
+<p class="attribution">Source: <a href="https://meta.wikimedia.org/wiki/List_of_Wikipedias/Table">Wikipedia metadata</a>
 
 <footer>
   <aside>December 6, 2016</aside>
@@ -389,7 +389,7 @@ function makeChart (scale) {
       
       function display_data(d, i){
         year = curryear - 2007;
-        document.getElementById("display_box").innerHTML = nations[i].language + "<br>Speakers: " + nations[i].speakers[year][1] + "<br>Articles: " + nations[i].articles[year][1] + "<br>Users: " + nations[i].users[year][1] + "<br>Region: " + nations[i].region;
+        document.getElementById("display_box").innerHTML = "<b>" + nations[i].language + "</b>" + "<br>Speakers: " + nations[i].speakers[year][1] + "<br>Articles: " + nations[i].articles[year][1] + "<br>Users: " + nations[i].users[year][1] + "<br>Region: " + nations[i].region;
        d3.select("#display_box").style("display", "block");
     }
 
@@ -397,7 +397,7 @@ function makeChart (scale) {
           year = curryear - 2007;
           for (i = 0; i < nations.length; i++){
               if(nations[i].language == currentlyHighlighted.language){
-                  document.getElementById("display_box").innerHTML = nations[i].language + "<br>Speakers: " + nations[i].speakers[year][1] + "<br>Articles: " + nations[i].articles[year][1] + "<br>Users: " + nations[i].users[year][1] + "<br>Region: " + nations[i].region;
+                  document.getElementById("display_box").innerHTML =  "<b>" + nations[i].language + "</b>" + "<br>Speakers: " + nations[i].speakers[year][1] + "<br>Articles: " + nations[i].articles[year][1] + "<br>Users: " + nations[i].users[year][1] + "<br>Region: " + nations[i].region;
               }
           }
       }
@@ -414,7 +414,6 @@ function makeChart (scale) {
       if ((select == "unselected") || (select == "start_selection")) {
         currentlyHighlighted.highlighted = false;
         currentlyHighlighted.language = d.language;
-        console.log(currentlyHighlighted.language);
 
         updateMap(d.region, country, sameRegion, sameLanguage);
 
@@ -431,8 +430,6 @@ function makeChart (scale) {
           updateMap(d.region, country, sameRegion, sameLanguage);
           currentlyHighlighted.language = "none";
           d3.select("#display_box").style("display", "none");
-
-          console.log(currentlyHighlighted.language);
 
           dot.style("opacity", 1);
           d3.select(this).attr("class", "unselected");
