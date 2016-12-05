@@ -13,6 +13,7 @@
 #description {
   width: 90%;
   position: relative;
+  font-family: "PT Serif", serif;
 }
     
 #display_box{
@@ -29,15 +30,26 @@
   margin-top: 15px;
   margin-left: -40px;
   height: 506px;
-/*  position: relative;
-  float: left;
-  display: inline-block;*/
 }
 
 #chartScale {
-/*  position: relative;
-  float: right;
-  display: inline-block;*/
+  display: block;
+  margin-left: 50px;
+  margin-right: none;
+  padding: none;
+  width: 580px;
+  float: left;
+  font-size: 12px;
+}
+
+#instructions {
+  font-family: "PT Serif", serif;
+  display: block;
+  float: left;
+  margin-left: 30px;
+  margin-top: 10px;
+  font-size: 12px;
+  width: 300px;
 }
     
 #container, #map {
@@ -47,7 +59,12 @@
 }
 
 text {
-  font: 10px sans-serif;
+  font-size: 10px;
+  font-family: "PT Serif", serif;
+}
+
+#subtitle {
+  margin-top: -10px;
 }
 
 .dot {
@@ -99,24 +116,23 @@ text {
 </header>
 
 <body>
-<h1>The Languages of Wikipedia</h1>
+<h1>Wikipedia Language Accessibility</h1>
+<h3 id="subtitle">How has Wikipedia in each language grown over time?</h3>
 
 <div id="display_box"></div>
 
 <div id = "chartAndScale">
   <div id="chart"></div>
   <div id = "chartScale"> 
-    <input type="radio" name="scale" value="log-full" onclick="changeScale(value)" checked> Logarithmic <br>
-    <input type="radio" name="scale" value="linear-full" onclick="changeScale(value)"> Linear <br>
-    <input type="radio" name="scale" value="linear-zoom" onclick="changeScale(value)"> Linear: zoomed <br>
-    <input type="radio" name="scale" value="linear-more-zoomed" onclick="changeScale(value)"> Linear: more zoomed <br>
-    <input type="radio" name="scale" value="linear-really-zoomed" onclick="changeScale(value)"> Linear: really zoomed <br>
-    <input type="radio" name="scale" value="linear-super-zoomed" onclick="changeScale(value)"> Linear: super zoomed <br>
-
+    <input type="radio" name="scale" value="log-full" onclick="changeScale(value)" checked> Logarithmic &nbsp;&nbsp;
+    <input type="radio" name="scale" value="linear-full" onclick="changeScale(value)"> Linear &nbsp;&nbsp;
+    <input type="radio" name="scale" value="linear-zoom" onclick="changeScale(value)"> Linear: zoomed &nbsp;&nbsp;
+    <input type="radio" name="scale" value="linear-more-zoomed" onclick="changeScale(value)"> Linear: more zoomed &nbsp;&nbsp;
+    <input type="radio" name="scale" value="linear-super-zoomed" onclick="changeScale(value)"> Linear: super zoomed &nbsp;&nbsp;
   </div>
 </div>
 
-<aside>Mouseover the bottom of the year to move forward and backwards through time. Click on a map region to highlight the corresponding languages on the graph or vice versa.</aside>
+<div id="instructions">Mouseover the bottom of the year to move forward and backwards through time. Click on a map region to highlight the corresponding languages on the graph or vice versa. Change the graph scale to better understand the distribution.</div>
 <p class="attribution">Source: <a href="https://meta.wikimedia.org/wiki/List_of_Wikipedias/Table">Wikipedia metadata</a>
 
 <div id="container">
@@ -124,7 +140,7 @@ text {
 </div>
 
 <div id="description"
-<p>The languages you speak vastly affect the information you have access to. This visualization of languages supported by Wikipedia shows the dynamic fluctuation in Wikipedia articles (<i>x</i>), users (<i>y</i>) and speakers (radius) of over 200 languages over the past 9 years. Languages are colored by geographic region; languages such as English or Spanish, which are spoken in multiple regions, are colored by where they originated. Mouseover to see more information!
+<p>The languages you speak vastly affect which and how much information you have access to. Wikipedia is seen as the encyclopedia of the 21st century, but the quantity of information available differs for each language. This visualization of languages with Wikipedia articles shows the dynamic fluctuation in Wikipedia articles (<i>x</i>), users (<i>y</i>) and speakers (radius) of over 200 languages over the past 9 years. Languages are colored by geographic region; languages such as English or Spanish, which are spoken in multiple regions, are colored by where they originated. Mouseover to see more information!
 
 <p>The data for this visualization was collected from <a href="https://meta.wikimedia.org/wiki/List_of_Wikipedias/Table">Wikipedia metadata</a> and research. 
 
@@ -180,24 +196,24 @@ function setUpChart(scale) {
 
   if (scale == "linear-full") {
   // Various scales. These domains make assumptions of data, naturally.
-    xScale = d3.scale.linear().domain([100, 6000000]).range([0, width]),
-    yScale = d3.scale.linear().domain([100, 30000000]).range([height, 0]);
+    xScale = d3.scale.linear().domain([0, 6000000]).range([0, width]),
+    yScale = d3.scale.linear().domain([0, 30000000]).range([height, 0]);
     yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(6, ",f");
   } else if (scale == "linear-zoom") {
-    xScale = d3.scale.linear().domain([100, 2000000]).range([0, width]),
-    yScale = d3.scale.linear().domain([100, 3000000]).range([height, 0]);
+    xScale = d3.scale.linear().domain([0, 2000000]).range([0, width]),
+    yScale = d3.scale.linear().domain([0, 3000000]).range([height, 0]);
     yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(6, ",f");
   } else if (scale == "linear-more-zoomed") {
-    xScale = d3.scale.linear().domain([100, 500000]).range([0, width]),
-    yScale = d3.scale.linear().domain([100, 500000]).range([height, 0]);
+    xScale = d3.scale.linear().domain([0, 500000]).range([0, width]),
+    yScale = d3.scale.linear().domain([0, 500000]).range([height, 0]);
     yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(6, ",f");
   } else if (scale == "linear-really-zoomed") {
-    xScale = d3.scale.linear().domain([100, 100000]).range([0, width]),
-    yScale = d3.scale.linear().domain([100, 100000]).range([height, 0]);
+    xScale = d3.scale.linear().domain([0, 100000]).range([0, width]),
+    yScale = d3.scale.linear().domain([0, 100000]).range([height, 0]);
     yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(6, ",f");
   } else if (scale == "linear-super-zoomed") {
-    xScale = d3.scale.linear().domain([10, 20000]).range([0, width]),
-    yScale = d3.scale.linear().domain([10, 20000]).range([height, 0]);
+    xScale = d3.scale.linear().domain([0, 20000]).range([0, width]),
+    yScale = d3.scale.linear().domain([0, 20000]).range([height, 0]);
     yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(6, ",f");
   } else { // log-full
     xScale = d3.scale.log().domain([100, 6000000]).range([0, width]),
@@ -274,19 +290,26 @@ function makeChart (scale) {
             updateDotsByRegion(region, dot, 1);
           }
           currentlyHighlighted.language = "none";
-          console.log(currentlyHighlighted.language);
+          // console.log(currentlyHighlighted.language);
         })
       },
       geographyConfig: {
-        borderWidth: 0.3,
+        borderWidth: 0.1,
+        borderOpacity: 0,
         popupTemplate: function(geo, data) {
               return ['<div class="hoverinfo"><strong>',
                       ' ' + geo.properties.name,
                       ': ' + data.Region,
                       '</strong></div>'].join('');
-          }
         },
-        fills: {
+        //popupOnHover: true,
+        highlightOnHover: true,
+        highlightFillColor: 'rgba(122, 122, 122, 0.4)',
+        highlightBorderColor: 'grey',
+        highlightBorderWidth: 0.1,
+        highlightBorderOpacity: 0
+      },
+      fills: {
             AFRICA: '#ffafdf',
             NORTH_AMERICA: '#2239ad',
             SOUTH_AMERICA: 'green',
@@ -613,12 +636,3 @@ function makeChart (scale) {
 }
  
 </script>
-
-<script>
-
-GoogleAnalyticsObject = "ga", ga = function() { ga.q.push(arguments); }, ga.q = [], ga.l = +new Date;
-ga("create", "UA-48272912-3", "ocks.org");
-ga("send", "pageview");
-
-</script>
-<script async src="//www.google-analytics.com/analytics.js"></script>
