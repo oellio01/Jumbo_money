@@ -19,6 +19,12 @@
   height: 506px;
 }
 
+#container, #map {
+  position: relative; 
+  width: 930px; 
+  height: 430px;
+}
+
 text {
   font: 10px sans-serif;
 }
@@ -123,6 +129,7 @@ input:checked + .slider:before {
   border-radius: 50%;
 }
 
+
 </style>
 
 <header>
@@ -134,21 +141,23 @@ input:checked + .slider:before {
 <h1>The Languages of Wikipedia</h1>
 
 <p id="chart"></p>
+
 <aside>Mouseover the bottom of the year to move forward and backwards through time. Click on a map region to highlight the corresponding languages on the graph.</aside>
 <p class="attribution">Source: <a href="https://meta.wikimedia.org/wiki/List_of_Wikipedias/Table">Wikipedia metadata</a>
-<div id="chart-options"> 
-  <label class="switch">
 
-<!--     <div class="squaredThree">
-      <input type="checkbox" value="None" id="squaredThree" name="check" checked />
-      <label for="squaredThree"></label>
-    </div> -->
-    
-  <input type="checkbox">
-  <div id="toggle" class="slider round"></div>
-</label>
+<div id = "chartScale"> 
+  <input type="radio" name="scale" value="log-full" onclick="changeScale(value)" checked> Logarithmic <br>
+  <input type="radio" name="scale" value="log-zoom" onclick="changeScale(value)"> Logarithmic: zoomed <br>
+  <input type="radio" name="scale" value="linear-full" onclick="changeScale(value)"> Linear <br>
+  <input type="radio" name="scale" value="linear-zoom" onclick="changeScale(value)"> Linear: zoomed <br>
+  <input type="radio" name="scale" value="linear-more-zoomed" onclick="changeScale(value)"> Linear: more zoomed <br>
+  <input type="radio" name="scale" value="linear-super-zoomed" onclick="changeScale(value)"> Linear: more zoomed <br>
 </div>
-<div id="container" style="position: relative; width: 930px; height: 430px;"></div>
+
+
+<div id="container">
+  <div id="map"> </div>
+</div>
 
 
 <div id="description"
@@ -179,12 +188,21 @@ function color(d) { return d.region; }
 function key(d) { return d.language; }
 
 // whether the chart is set to a linear or logarithmic scale
-var scale = "log";
-var toggle = document.getElementById("toggle");
-toggle.addEventListener("click", function() {
+var scale = "log-full";
+function changeScale(value) {
   d3.select("svg").remove();
-  setUpChart("linear");
-});
+  document.getElementById("map").remove();
+  document.getElementById("container").innerHTML += '<div id="map">';
+  setUpChart(value);
+}
+
+// whether or not a region is currently highlighted
+var regionHighlighted = { 
+  highlighted: false,
+  region : "none" 
+};
+
+setUpChart("log-full");
 
 function setUpChart(scale) {
   // Chart dimensions.
@@ -192,14 +210,27 @@ function setUpChart(scale) {
       width = 960 - margin.right,
       height = 500 - margin.top - margin.bottom;
 
-  if (scale == "linear") {
+  if (scale == "linear-full") {
   // Various scales. These domains make assumptions of data, naturally.
     xScale = d3.scale.linear().domain([100, 6000000]).range([0, width]),
     yScale = d3.scale.linear().domain([100, 30000000]).range([height, 0]);
-  } else {
+  } else if (scale == "linear-zoom") {
+    xScale = d3.scale.linear().domain([100, 2000000]).range([0, width]),
+    yScale = d3.scale.linear().domain([100, 3000000]).range([height, 0]);
+  } else if (scale == "linear-more-zoomed") {
+    xScale = d3.scale.linear().domain([100, 500000]).range([0, width]),
+    yScale = d3.scale.linear().domain([100, 500000]).range([height, 0]);
+  } else if (scale == "linear-super-zoomed") {
+    xScale = d3.scale.linear().domain([100, 100000]).range([0, width]),
+    yScale = d3.scale.linear().domain([100, 100000]).range([height, 0]);
+  } else if (scale == "log-zoom") {
+    xScale = d3.scale.log().domain([100, 2000000]).range([0, width]),
+    yScale = d3.scale.log().domain([100, 3000000]).range([height, 0]);
+  } else { // log-full
     xScale = d3.scale.log().domain([100, 6000000]).range([0, width]),
     yScale = d3.scale.log().domain([100, 30000000]).range([height, 0]);
   }
+
   radiusScale = d3.scale.sqrt().domain([0, 1200294060 ]).range([0, 100]),
   colorScale = d3.scale.category10();
 
@@ -251,20 +282,70 @@ function setUpChart(scale) {
       .attr("x", width)
       .text(2007);
 
-      makeChart(scale);
+    makeChart(scale);
 }
 
-setUpChart("log");
-
-// whether or not a region is currently highlighted
-var regionHighlighted = { 
-  highlighted: false,
-  region : "none" };
-
 function makeChart (scale) {
-  console.log(scale);
   // Load the data.
   d3.json("THEIRFORMAT.json", function(nations) {
+
+  // map of the world
+  var map = new Datamap({
+      element: document.getElementById('map'),
+      done: function(map) {
+        map.svg.selectAll('.datamaps-subunit').on('click', function(geo) {
+          var localData = map.options.data[geo.id];
+          var country = geo.id;
+          var region = "";
+          if ( localData && localData.Region ) {
+            region = localData.Region;
+            updateMap(region, localData.Country, regionHighlighted, false);
+            updateDotsByRegion(region, dot);
+          }
+        })
+      },
+      geographyConfig: {
+        borderWidth: 0.3,
+        popupTemplate: function(geo, data) {
+              return ['<div class="hoverinfo"><strong>',
+                      ' ' + geo.properties.name,
+                      ': ' + data.Region,
+                      '</strong></div>'].join('');
+          }
+        },
+        fills: {
+            AFRICA: '#ffafdf',
+            NORTH_AMERICA: '#2239ad',
+            SOUTH_AMERICA: 'green',
+            EAST_ASIA: '#f44e4e',
+            SOUTHEAST_ASIA: 'purple',
+            SOUTH_ASIA: '#f97b04',
+            OCEANIA: '#f1f747',
+            CARIBBEAN: '#c17eea',
+            EASTERN_EUROPE: '#00dbef',
+            WESTERN_EUROPE: '#893046',
+            NORTHERN_EUROPE: '#4286f4',
+            SOUTHERN_EUROPE: '#db02b3',
+            CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST: '#66c17d',
+
+            AFRICA_LIGHT: '#ffe6f5',
+            NORTH_AMERICA_LIGHT: '#bec9f3',
+            SOUTH_AMERICA_LIGHT: '#ccffcc',
+            EAST_ASIA_LIGHT: '#fccfcf',
+            SOUTHEAST_ASIA_LIGHT: '#ffb3ff',
+            SOUTH_ASIA_LIGHT: '#fed8b4',
+            OCEANIA_LIGHT: '#fbfdce',
+            CARIBBEAN_LIGHT: '#ead3f8',
+            EASTERN_EUROPE_LIGHT: '#ccfbff',
+            WESTERN_EUROPE_LIGHT: '#e4b4c1',
+            NORTHERN_EUROPE_LIGHT: '#b7d1fa',
+            SOUTHERN_EUROPE_LIGHT: '#feb3f0',
+            CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST_LIGHT: '#b7e1c1',
+
+            NOFILL: 'grey',
+            defaultFill: 'white'
+        }, 
+    });
 
     // A bisector; probably not actually necessary given our data
     var bisect = d3.bisector(function(d) { return d[0]; });
@@ -330,9 +411,7 @@ function makeChart (scale) {
 
     // link map with dots
     function updateDotsByRegion(region, dot) {
-      console.log("updating dots!");
       if (region != "none") {
-        console.log("changing region!");
         dot.style("opacity", function(d) {
           var location = color(d);
           if (location != region) {
@@ -340,8 +419,6 @@ function makeChart (scale) {
           }
         })
       } else {
-        console.log("region set!!");
-
         dot.style("opacity", 1);
       }
     }
@@ -445,14 +522,12 @@ function makeChart (scale) {
       return a[1];
     }
 
-   function updateMap(region, country, regionHighlighted, reset) {
+   function updateMap (region, country, regionHighlighted, reset) {
         var countryFill = getFillKey(region);
 
         d3.csv("regions.csv", function(error, data) {
         // normal map; specific region was not clicked
         if ((region == "") || (reset == true) || (region == regionHighlighted.region)) {
-          console.log("region:-updateMap " + region);
-          console.log("highlighted-updateMap: " + regionHighlighted.region);
           if (region == regionHighlighted.region) {
             updateDotsByRegion("none", dot);
           }
@@ -492,63 +567,6 @@ function makeChart (scale) {
       }
     );
   }   
-
-  var map = new Datamap({
-      element: document.getElementById('container'),
-      done: function(map) {
-        map.svg.selectAll('.datamaps-subunit').on('click', function(geo) {
-          var localData = map.options.data[geo.id];
-          var country = geo.id;
-          var region = "";
-          if ( localData && localData.Region ) {
-            region = localData.Region;
-            updateMap(region, localData.Country, regionHighlighted, false);
-            updateDotsByRegion(region, dot);
-          }
-        })
-      },
-      geographyConfig: {
-        borderWidth: 0.3,
-        popupTemplate: function(geo, data) {
-              return ['<div class="hoverinfo"><strong>',
-                      ' ' + geo.properties.name,
-                      ': ' + data.Region,
-                      '</strong></div>'].join('');
-          }
-        },
-        fills: {
-            AFRICA: '#ffafdf',
-            NORTH_AMERICA: '#2239ad',
-            SOUTH_AMERICA: 'green',
-            EAST_ASIA: '#f44e4e',
-            SOUTHEAST_ASIA: 'purple',
-            SOUTH_ASIA: '#f97b04',
-            OCEANIA: '#f1f747',
-            CARIBBEAN: '#c17eea',
-            EASTERN_EUROPE: '#00dbef',
-            WESTERN_EUROPE: '#893046',
-            NORTHERN_EUROPE: '#4286f4',
-            SOUTHERN_EUROPE: '#db02b3',
-            CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST: '#66c17d',
-
-            AFRICA_LIGHT: '#ffe6f5',
-            NORTH_AMERICA_LIGHT: '#bec9f3',
-            SOUTH_AMERICA_LIGHT: '#ccffcc',
-            EAST_ASIA_LIGHT: '#fccfcf',
-            SOUTHEAST_ASIA_LIGHT: '#ffb3ff',
-            SOUTH_ASIA_LIGHT: '#fed8b4',
-            OCEANIA_LIGHT: '#fbfdce',
-            CARIBBEAN_LIGHT: '#ead3f8',
-            EASTERN_EUROPE_LIGHT: '#ccfbff',
-            WESTERN_EUROPE_LIGHT: '#e4b4c1',
-            NORTHERN_EUROPE_LIGHT: '#b7d1fa',
-            SOUTHERN_EUROPE_LIGHT: '#feb3f0',
-            CAUCASUS_CENTRAL_ASIA_MIDDLE_EAST_LIGHT: '#b7e1c1',
-
-            NOFILL: 'grey',
-            defaultFill: 'white'
-        }, 
-    });
 
   var where = "";
   var country = "";
