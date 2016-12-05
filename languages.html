@@ -13,20 +13,33 @@
 #description {
   width: 90%;
   position: relative;
+  font-family: "PT Serif", serif;
 }
 
 #chart {
-  margin-left: -40px;
+  margin-left: -20px;
+  margin-right: 100px;
   height: 506px;
-/*  position: relative;
-  float: left;
-  display: inline-block;*/
 }
 
 #chartScale {
-/*  position: relative;
-  float: right;
-  display: inline-block;*/
+  display: block;
+  margin-left: 50px;
+  margin-right: none;
+  padding: none;
+  width: 580px;
+  float: left;
+  font-size: 12px;
+}
+
+#instructions {
+  font-family: "PT Serif", serif;
+  display: block;
+  float: left;
+  margin-left: 30px;
+  margin-top: 10px;
+  font-size: 12px;
+  width: 300px;
 }
 
 #container, #map {
@@ -36,7 +49,8 @@
 }
 
 text {
-  font: 10px sans-serif;
+  font-size: 10px;
+  font-family: "PT Serif", serif;
 }
 
 .dot {
@@ -93,15 +107,15 @@ text {
 <div id = "chartAndScale">
   <div id="chart"></div>
   <div id = "chartScale"> 
-    <input type="radio" name="scale" value="log-full" onclick="changeScale(value)" checked> Logarithmic <br>
-    <input type="radio" name="scale" value="linear-full" onclick="changeScale(value)"> Linear <br>
-    <input type="radio" name="scale" value="linear-zoom" onclick="changeScale(value)"> Linear: zoomed <br>
-    <input type="radio" name="scale" value="linear-more-zoomed" onclick="changeScale(value)"> Linear: more zoomed <br>
-    <input type="radio" name="scale" value="linear-super-zoomed" onclick="changeScale(value)"> Linear: super zoomed <br>
+    <input type="radio" name="scale" value="log-full" onclick="changeScale(value)" checked> Logarithmic &nbsp;&nbsp;
+    <input type="radio" name="scale" value="linear-full" onclick="changeScale(value)"> Linear &nbsp;&nbsp;
+    <input type="radio" name="scale" value="linear-zoom" onclick="changeScale(value)"> Linear: zoomed &nbsp;&nbsp;
+    <input type="radio" name="scale" value="linear-more-zoomed" onclick="changeScale(value)"> Linear: more zoomed &nbsp;&nbsp;
+    <input type="radio" name="scale" value="linear-super-zoomed" onclick="changeScale(value)"> Linear: super zoomed &nbsp;&nbsp;
   </div>
 </div>
 
-<aside>Mouseover the bottom of the year to move forward and backwards through time. Click on a map region to highlight the corresponding languages on the graph or vice versa.</aside>
+<div id="instructions">Mouseover the bottom of the year to move forward and backwards through time. Click on a map region to highlight the corresponding languages on the graph or vice versa. Change the graph scale to better understand the distribution.</div>
 <p class="attribution">Source: <a href="https://meta.wikimedia.org/wiki/List_of_Wikipedias/Table">Wikipedia metadata</a>
 
 <div id="container">
