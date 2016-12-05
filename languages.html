@@ -14,8 +14,19 @@
   width: 90%;
   position: relative;
 }
+    
+#display_box{
+    width: 30%;
+    margin-left: 90px;
+    margin-top: 40px;
+    margin-bottom: -80px;
+    padding: 8px;
+    border: 2px solid black;
+    background-color: rgba(122, 122, 122, .1);
+}    
 
 #chart {
+  margin-top: 15px;
   margin-left: -40px;
   height: 506px;
 /*  position: relative;
@@ -28,7 +39,7 @@
   float: right;
   display: inline-block;*/
 }
-
+    
 #container, #map {
   position: relative; 
   width: 930px; 
@@ -89,6 +100,8 @@ text {
 
 <body>
 <h1>The Languages of Wikipedia</h1>
+
+<div id="display_box"></div>
 
 <div id = "chartAndScale">
   <div id="chart"></div>
@@ -245,7 +258,7 @@ function setUpChart(scale) {
 
 function makeChart (scale) {
   // Load the data.
-  d3.json("THEIRFORMAT.json", function(nations) {
+  d3.json("lang_data.json", function(nations) {
 
   // Map of the world
   var map = new Datamap({
@@ -347,9 +360,25 @@ function makeChart (scale) {
         .text(function(d) { 
           var text = d.language;
           return text });
+      
+      function display_data(d, i){
+        year = curryear - 2007;
+        document.getElementById("display_box").innerHTML = nations[i].language + "<br>Speakers: " + nations[i].speakers[year][1] + "<br>Articles: " + nations[i].articles[year][1] + "<br>Users: " + nations[i].users[year][1] + "<br>Region: " + nations[i].region;
+    }
 
+      function update_display(){
+          year = curryear - 2007;
+          for (i = 0; i < nations.length; i++){
+              if(nations[i].language == currentlyHighlighted.language){
+                  document.getElementById("display_box").innerHTML = nations[i].language + "<br>Speakers: " + nations[i].speakers[year][1] + "<br>Articles: " + nations[i].articles[year][1] + "<br>Users: " + nations[i].users[year][1] + "<br>Region: " + nations[i].region;
+              }
+          }
+      }
+      
     // Change opacity of dots and map based on which one you clicked
     function clicked(d, i) {
+      display_data(d, i);    
+        
       dot.style("stroke-width", 1)
       var select = d3.select(this).attr("class");
       var sameRegion = (d.region == currentlyHighlighted.region);
@@ -466,6 +495,8 @@ function makeChart (scale) {
 
     // Updates the display to show the specified year.
     function displayYear(year) {
+      curryear = Math.floor(year);
+      update_display();
       dot.data(interpolateData(year), key).call(position).sort(order);
       label.text(Math.round(year));
     }
