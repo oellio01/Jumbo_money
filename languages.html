@@ -176,6 +176,7 @@ function changeScale(value) {
   document.getElementById("map").remove();
   document.getElementById("container").innerHTML += '<div id="map">';
   setUpChart(value);
+  d3.select("#display_box").style("display", "none");
 }
 
 // what is currently is currently highlighted
@@ -293,7 +294,6 @@ function makeChart (scale) {
           }
           currentlyHighlighted.language = "none";
           d3.select("#display_box").style("display", "none");
-          // console.log(currentlyHighlighted.language);
         })
       },
       geographyConfig: {
