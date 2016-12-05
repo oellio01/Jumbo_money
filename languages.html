@@ -139,7 +139,8 @@ function changeScale(value) {
 // whether or not a region is currently highlighted
 var regionHighlighted = { 
   highlighted: false,
-  region : "none" 
+  region : "none",
+  language: "none"
 };
 
 setUpChart("log-full");
@@ -239,7 +240,7 @@ function makeChart (scale) {
           var region = "";
           if ( localData && localData.Region ) {
             region = localData.Region;
-            updateMap(region, localData.Country, regionHighlighted, false);
+            updateMap(region, localData.Country, regionHighlighted, false, false);
             updateDotsByRegion(region, dot, 1);
           }
         })
@@ -332,27 +333,26 @@ function makeChart (scale) {
     function clicked(d, i) {
       dot.style("stroke-width", 1)
       var select = d3.select(this).attr("class");
+      var sameRegion = (d.region == regionHighlighted.region);
+      var sameLanguage = (regionHighlighted.language == d.language);
 
       if ((select == "unselected") || (select == "start_selection")) {
-        console.log(select);
         regionHighlighted.highlighted = false;
+        regionHighlighted.language = d.language;
 
-        if (d.region == regionHighlighted.region) {
-          updateMap(d.region, country, regionHighlighted, true);
-        } else {
-          updateMap(d.region, country, regionHighlighted, false);
-        }
+        updateMap(d.region, country, regionHighlighted, sameRegion, sameLanguage);
+
         dot.style("opacity", 0.15);
         dot.attr("class", "unselected");
         updateDotsByRegion(d.region, dot, 0.6);
+        
         d3.select(this)
           .style("opacity", 1)
           .style("stroke-width", 2)
           .attr("class", "selected");
       } else {
-        console.log("selected!");
           regionHighlighted.highlighted = true;
-          updateMap(d.region, country, regionHighlighted, true);
+          updateMap(d.region, country, regionHighlighted, sameRegion, sameLanguage);
           dot.style("opacity", 1);
           d3.select(this).attr("class", "unselected");
         } 
@@ -360,7 +360,6 @@ function makeChart (scale) {
 
     // link map with dots
     function updateDotsByRegion(region, dot, selectedOpacity) {
-      console.log("updating dots by region!");
       if (region != "none") {
         dot.style("opacity", function(d) {
           var location = color(d);
@@ -474,14 +473,14 @@ function makeChart (scale) {
       return a[1];
     }
 
-   function updateMap (region, country, regionHighlighted, sameRegion) {
+   function updateMap (region, country, regionHighlighted, sameRegion, sameLanguage) {
+        console.log(sameRegion);
+        console.log(sameLanguage);
         var countryFill = getFillKey(region);
 
         d3.csv("regions.csv", function(error, data) {
         // normal map; no highlighting of a specific region
-        if (((region == "") || (region == regionHighlighted.region)) && (sameRegion == false)) {
-          console.log(region);
-          console.log(regionHighlighted.region);
+        if (((region == "") || (region == regionHighlighted.region) && (sameRegion == false)) || sameLanguage) {
           if (region == regionHighlighted.region) {
             updateDotsByRegion("none", dot, 1);
           }
@@ -496,7 +495,6 @@ function makeChart (scale) {
           regionHighlighted.region = "none"; 
         // highlight a specific region
         } else { 
-          console.log("highlight specific region on map");
           for (var i = 0; i < data.length; i++) { 
               data[i].fillKey = {};
               if (data[i].Region == region) {
@@ -524,7 +522,7 @@ function makeChart (scale) {
 
   var where = "";
   var country = "";
-  updateMap(where, country, regionHighlighted, false);
+  updateMap(where, country, regionHighlighted, false, false);
 
   function getFillKey(region) {
     if (region == 'Africa') { return 'AFRICA'; }
