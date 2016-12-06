@@ -1,5 +1,5 @@
-# Jumbo_money
+# Visualizing-Wikipedia-Languages
 
-Final project for computer visualizations
+This is our final project for our Computer Visualizations class at Tufts University, Fall 2016. 
 
 Contributers: Hannah Freedman, Sibonay Koo, Owen Elliott
