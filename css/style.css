@@ -217,6 +217,19 @@ blockquote q:after {
   margin-top: 40px;
   font-family: "PT Serif", serif;
 }
+#map_hint{
+  float: right;
+  display: block;
+  margin-right: -200px;
+  border: 2px solid black;
+}
+
+#names {
+  font-size: small;
+  float: right;
+  margin-top: -8px;
+  margin-right: -8px;
+}
 
 #radiusKey {
   font-size: 9px;
@@ -279,6 +292,10 @@ text {
 
 #subtitle {
   margin-top: -10px;
+  width: 440px;
+  float: left;
+  padding: 0px;
+  margin-bottom: 0px;
 }
 
 .dot {
