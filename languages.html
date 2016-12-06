@@ -12,7 +12,7 @@
 <h1>Information Accessibility by Language</h1>
 <h3 id="subtitle">How has Wikipedia in each language grown over time?</h3>
 <div id="names">
-<a rel="author">Hannah Freedman, Owen Elliott & Sibonay Koo </a> | December 6, 2016 
+<a rel="author">Hannah Freedman, Owen Elliott & Sibonay Koo </a> &nbsp;|&nbsp; December 6, 2016 
 </div>
 <div id="display_box"></div>
 
@@ -535,5 +535,22 @@ function makeChart (scale) {
   }
   });
 }
+
+// have the map hint disappear once you scroll down
+$('#map_hint').hide();
+$(function() {
+    $(document).on("mousewheel", function() {
+        if($(document).scrollTop() > 200){
+            $('#map_hint').hide();
+        } else {
+            $('#map_hint').show();
+        }
+        
+    });
+});
+
+$("#map_hint").click(function(){
+    $("#map_hint").hide();
+});
  
 </script>

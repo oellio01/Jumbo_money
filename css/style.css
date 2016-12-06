@@ -99,6 +99,8 @@ h1 ~ aside {
 
 body > p, li > p {
   line-height: 1.5em;
+      font-family: "PT Sans", sans-serif;
+
 }
 
 body > p {
@@ -215,26 +217,24 @@ blockquote q:after {
   width: 100%;
   position: relative;
   margin-top: 40px;
-  font-family: "PT Serif", serif;
+/*  font-family: "PT Serif", serif;
+*/
+  font-family: "PT Sans", sans-serif;
 }
 
 #map_hint{
-  float: right;
-  display: block;
-  margin-right: -200px;
-  border: 2px solid black;
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
 }
 
 .smoothScroll {
   text-decoration: none;
-}
-
-.smoothScroll a:hover {
-  background-color: red;
+  color: #AAAAAA;
 }
 
 a#map_hint.smoothScroll:hover {
-  background-color: rgba(122, 122, 122, .3);
+  color: rgba(122, 122, 122, 1);
 }
 
 
@@ -243,6 +243,8 @@ a#map_hint.smoothScroll:hover {
   float: right;
   margin-top: -8px;
   margin-right: -8px;
+  font-family: "PT Sans", sans-serif;
+
 }
 
 #radiusKey {
@@ -281,15 +283,18 @@ a#map_hint.smoothScroll:hover {
   width: 580px;
   float: left;
   font-size: 12px;
+  font-family: "PT Sans", sans-serif;
 }
 
 #instructions {
-  font-family: "PT Serif", serif;
+/*  font-family: "PT Serif", serif;
+*/  
+  font-family: "PT Sans", sans-serif;
   display: block;
   float: left;
   margin-left: 30px;
   font-size: 12px;
-  width: 300px;
+  width: 345px;
 }
 
 #container, #map {
