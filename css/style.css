@@ -217,12 +217,26 @@ blockquote q:after {
   margin-top: 40px;
   font-family: "PT Serif", serif;
 }
+
 #map_hint{
   float: right;
   display: block;
   margin-right: -200px;
   border: 2px solid black;
 }
+
+.smoothScroll {
+  text-decoration: none;
+}
+
+.smoothScroll a:hover {
+  background-color: red;
+}
+
+a#map_hint.smoothScroll:hover {
+  background-color: rgba(122, 122, 122, .3);
+}
+
 
 #names {
   font-size: small;
@@ -336,5 +350,6 @@ text {
   stroke: black;
   opacity: 0.3;
 }
+
 .datamaps-hoverover {display: none; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; } 
 .hoverinfo {padding: 4px; border-radius: 1px; background-color: #FFF; box-shadow: 1px 1px 5px #CCC; font-size: 12px; border: 1px solid #CCC;
