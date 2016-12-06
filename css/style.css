@@ -217,6 +217,16 @@ blockquote q:after {
   margin-top: 40px;
   font-family: "PT Serif", serif;
 }
+
+#radiusKey {
+  font-size: 9px;
+  padding: 5px 0px 5px 0px;
+  margin-left: 3px;
+
+/*  margin-bottom: -30px;
+  margin-left: 40px;*/
+  color: #777;
+}
     
 #display_box{
     width: 30%;
@@ -238,7 +248,7 @@ blockquote q:after {
 
 #chartScale {
   display: block;
-  margin-left: 50px;
+/*  margin-left: 50px;*/
   margin-right: none;
   padding: none;
   width: 580px;
