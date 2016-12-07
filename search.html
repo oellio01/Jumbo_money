@@ -1,0 +1,60 @@
+<html lang="en"> 
+<head>
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.4.2/chosen.css" />
+</head>
+<body>
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script type="text/javascript" src="chosen_v1.6.2/chosen.jquery.min.js"></script>
+
+  <form>
+  <div id="container">
+    
+    <select multiple data-placeholder="Select language" id="selectList" class="chzn-select" style="width:150px;" tabindex="2">
+          <option value=""></option> 
+        </select>
+        <br /><br />
+
+  </div>
+
+<script>
+
+  selected = [];
+
+
+  $.getJSON("lang_data.json", function(json) {
+      var x = document.getElementById("selectList");
+
+      for (var i = 0; i < json.length; i++) {
+        var language = json[i]['language'];
+        var option = document.createElement("option");
+        option.value = language;
+        option.text = language;
+        x.add(option);
+      }
+
+  $(".chzn-select").chosen().change(function(evt, params) {
+        if (params.selected != undefined)
+        {
+            selected.push(params.selected)
+            console.log(selected);
+
+        }
+        if (params.deselected != undefined)
+        {
+            for(var i = selected.length - 1; i >= 0; i--) {
+                if(selected[i] === params.deselected) {
+                   selected.splice(i, 1);
+                }
+            }
+            console.log(selected);
+        }
+    });
+  });
+
+
+
+
+
+</script>
+
+
