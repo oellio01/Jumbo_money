@@ -15,6 +15,11 @@
 <div id="names">
 <a rel="author">Hannah Freedman, Owen Elliott & Sibonay Koo </a> &nbsp;|&nbsp; December 6, 2016 
 </div>
+
+<select multiple data-placeholder="Select language" id="selectList" class="chzn-select" style="width:125px;" tabindex="2">
+      <option value=""></option> 
+</select>
+
 <div id="display_box"></div>
 
 <div id = "chartAndScale">
@@ -61,6 +66,15 @@
 
 <script>
 
+// current settings
+currSettings = { 
+  highlighted: false,
+  region : "none",
+  language: "none",
+  selected: [],  // search box for languages
+  scale: "log-full"
+};
+
 // Various accessors that specify the four dimensions of data to visualize.
 function x(d) { return d.articles; }
 function y(d) { return d.users; }
@@ -69,7 +83,6 @@ function color(d) { return d.region; }
 function key(d) { return d.language; }
 
 // whether the chart is set to a linear or logarithmic scale
-var scale = "log-full";
 function changeScale(value) {
   d3.select("#display_box").style("display", "none");
   // redraw chart and map
@@ -77,16 +90,44 @@ function changeScale(value) {
   document.getElementById("map").remove();
   document.getElementById("container").innerHTML += '<div id="map">';
   setUpChart(value);
+  currSettings.scale = value;
 }
 
-// what is currently is currently highlighted
-currentlyHighlighted = { 
-  highlighted: false,
-  region : "none",
-  language: "none"
-};
+$.getJSON("lang_data.json", function(json) {
+    var x = document.getElementById("selectList");
 
-setUpChart("log-full");
+    for (var i = 0; i < json.length; i++) {
+      var language = json[i]['language'];
+      var option = document.createElement("option");
+      option.value = language;
+      option.text = language;
+      x.add(option);
+    }
+
+$(".chzn-select").chosen().change(function(evt, params) {
+      if (params.selected != undefined)
+      {
+          currSettings.selected.push(params.selected)
+          console.log(currSettings.selected);
+      }
+      if (params.deselected != undefined)
+      {
+          for(var i = currSettings.selected.length - 1; i >= 0; i--) {
+              if((currSettings.selected)[i] === params.deselected) {
+                 currSettings.selected.splice(i, 1);
+              }
+          }
+          console.log(currSettings.selected);
+      }
+      d3.select("svg").remove();
+      document.getElementById("map").remove();
+      document.getElementById("container").innerHTML += '<div id="map">';
+      setUpChart(currSettings.scale);
+      //updateDisplay();
+  });
+});
+
+setUpChart(currSettings.scale);
 
 function setUpChart(scale) {
   // Chart dimensions.
@@ -189,10 +230,12 @@ function makeChart (scale) {
           var region = "";
           if ( localData && localData.Region ) {
             region = localData.Region;
+            console.log(currSettings.region);
             updateMap(region, localData.Country, false, false);
             updateDotsByRegion(region, dot, 1);
+            //currSettings.region = localData.Region;
           }
-          currentlyHighlighted.language = "none";
+          currSettings.language = "none";
           d3.select("#display_box").style("display", "none");
         })
       },
@@ -254,7 +297,6 @@ function makeChart (scale) {
       .selectAll(".dot")
         .data(interpolateData(2007))
       .enter().append("circle")
-        //.attr("class", "dot start_selection")
         .attr("class", "start_selection")
         .attr("region", function(d) {
           var region = color(d);
@@ -285,22 +327,32 @@ function makeChart (scale) {
         .text(function(d) { 
           var text = d.language;
           return text });
+
+    // Show specific language
+    var array = currSettings.selected;
+    if (typeof array != "undefined" && array != null && array.length > 0) {
+      console.log("empty??");
+      console.log(currSettings.selected);
+      updateDotsByLanguages(1);
+    }
  
     function numberWithCommas(x) {
         return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
 
-      function display_data(d, i){
-        year = curryear - 2007;
+    function displayData(d, i){
+        var  year = curryear - 2007;
 
         document.getElementById("display_box").innerHTML = "<b>" + nations[i].language + "</b>" + "<br>Speakers: " + numberWithCommas(nations[i].speakers[year][1]) + "<br>Articles: " + numberWithCommas(nations[i].articles[year][1]) + "<br>Users: " + numberWithCommas(nations[i].users[year][1]) + "<br>Region: " + nations[i].region;
       d3.select("#display_box").style("display", "block");
     }
 
-      function update_display(){
-          year = curryear - 2007;
-          for (i = 0; i < nations.length; i++){
-              if(nations[i].language == currentlyHighlighted.language){
+      function updateDisplay(){
+          var year = curryear - 2007;
+          for (i = 0; i < nations.length; i++) {
+              var language = currSettings.language;
+
+              if (nations[i].language == language || currSettings.selected.indexOf(language) >= 0) {
                   document.getElementById("display_box").innerHTML = "<b>" + nations[i].language + "</b>"  + "<br>Speakers: " + numberWithCommas(nations[i].speakers[year][1]) + "<br>Articles: " + numberWithCommas(nations[i].articles[year][1]) + "<br>Users: " + numberWithCommas(nations[i].users[year][1]) + "<br>Region: " + nations[i].region;
               }
           }
@@ -308,16 +360,16 @@ function makeChart (scale) {
       
     // Change opacity of dots and map based on which one you clicked
     function clicked(d, i) {
-      display_data(d, i);    
+      displayData(d, i);    
         
       dot.style("stroke-width", 1)
       var select = d3.select(this).attr("class");
-      var sameRegion = (d.region == currentlyHighlighted.region);
-      var sameLanguage = (currentlyHighlighted.language == d.language);
+      var sameRegion = (d.region == currSettings.region);
+      var sameLanguage = (currSettings.language == d.language);
 
       if ((select == "unselected") || (select == "start_selection")) {
-        currentlyHighlighted.highlighted = false;
-        currentlyHighlighted.language = d.language;
+        currSettings.highlighted = false;
+        currSettings.language = d.language;
         updateMap(d.region, country, sameRegion, sameLanguage);
         dot.style("opacity", 0.15);
         dot.attr("class", "unselected");
@@ -328,9 +380,9 @@ function makeChart (scale) {
           .style("stroke-width", 2)
           .attr("class", "selected");
       } else {
-          currentlyHighlighted.highlighted = true;
+          currSettings.highlighted = true;
           updateMap(d.region, country, sameRegion, sameLanguage);
-          currentlyHighlighted.language = "none";
+          currSettings.language = "none";
           d3.select("#display_box").style("display", "none");
           dot.style("opacity", 1);
           d3.select(this).attr("class", "unselected");
@@ -339,6 +391,7 @@ function makeChart (scale) {
 
     // Link map with dots
     function updateDotsByRegion(region, dot, selectedOpacity) {
+      console.log("UPDATING DOTS");
       if (region != "none") {
         dot.style("opacity", function(d) {
           var location = d.region;
@@ -346,6 +399,23 @@ function makeChart (scale) {
             return 0.15;
           } else {
             return selectedOpacity;
+          }
+        })
+      } else {
+        console.log("region = none!!!");
+        dot.style("opacity", 1);
+      }
+    }
+
+    // Link map with dots
+    function updateDotsByLanguages(selectedOpacity) {
+      if (currSettings.selected != {}) {
+        dot.style("opacity", function(d) {
+          var language = d.language;
+          if (currSettings.selected.indexOf(language) >= 0) {
+            return selectedOpacity;
+          } else {
+            return 0.15;
           }
         })
       } else {
@@ -422,7 +492,7 @@ function makeChart (scale) {
     // Updates the display to show the specified year.
     function displayYear(year) {
       curryear = Math.floor(year);
-      update_display();
+      updateDisplay();
       dot.data(interpolateData(year), key).call(position).sort(order);
       label.text(Math.round(year));
     }
@@ -454,13 +524,21 @@ function makeChart (scale) {
       return a[1];
     }
 
-   function updateMap (region, country, sameRegion, sameLanguage) {
+
+    var where = "";
+    var country = "";
+    updateMap(where, country, false, false);
+
+    function updateMap (region, country, sameRegion, sameLanguage) {
+      console.log("updating map");
         var countryFill = getFillKey(region);
 
         d3.csv("regions.csv", function(error, data) {
         // normal map; no highlighting of a specific region
-        if (((region == "") || (region == currentlyHighlighted.region) && (sameRegion == false)) || sameLanguage) {
-          if (region == currentlyHighlighted.region) {
+        if (((region == "") || (region == currSettings.region) && (sameRegion == false)) || sameLanguage) {
+          if (region == currSettings.region) {
+            console.log("region == currSettings.region");
+            console.log(region);
             updateDotsByRegion("none", dot, 1);
           }
           for (var i = 0; i < data.length; i++) { 
@@ -470,11 +548,12 @@ function makeChart (scale) {
             delete  data[i].ISO;
             delete  data[i] ;
           }
-          currentlyHighlighted.highlighted = false;
-          currentlyHighlighted.region = "none"; 
+          currSettings.highlighted = false;
+          currSettings.region = "none"; 
 
         // highlight a specific region
         } else { 
+          console.log("trying to highlight a region");
           for (var i = 0; i < data.length; i++) { 
               data[i].fillKey = {};
               if (data[i].Region == region) {
@@ -492,17 +571,13 @@ function makeChart (scale) {
               delete  data[i].ISO;
               delete  data[i] ;
           }  
-          currentlyHighlighted.highlighted = true;
-          currentlyHighlighted.region = region;    
+          currSettings.highlighted = true;
+          currSettings.region = region;    
         }
         map.updateChoropleth(data, {reset: true});
       }
     );
   }   
-
-  var where = "";
-  var country = "";
-  updateMap(where, country, false, false);
 
   function getFillKey(region) {
     if (region == 'Africa') { return 'AFRICA'; }

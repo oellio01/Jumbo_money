@@ -213,6 +213,15 @@ blockquote q:after {
 
 /* start of additional CSS for our languages.html vis */
 
+#selectList, #selectList_chosen {
+    margin-left: -180px;
+    margin-top: 40px;
+    margin-bottom: -80px;
+    position: absolute;
+    font-family: "PT Sans", sans-serif;
+
+}
+
 #description {
   width: 100%;
   position: relative;
@@ -226,6 +235,7 @@ blockquote q:after {
   position: fixed;
   bottom: 25px;
   right: 25px;
+  font-family: "PT Sans", sans-serif;
 }
 
 .smoothScroll {
