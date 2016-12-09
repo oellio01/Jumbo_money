@@ -62,7 +62,7 @@
 <script src="datamaps/datamaps.world.min.js"></script>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <script type="text/javascript" src="js/smoothscroll.js"></script>
-<script type="text/javascript" src="chosen_v1.6.2/chosen.jquery.min.js"></script>
+<script type="text/javascript" src="chosen_v1.6.2/chosen.jquery.js"></script>
 
 <script>
 
@@ -98,29 +98,37 @@ $.getJSON("lang_data.json", function(json) {
 
     for (var i = 0; i < json.length; i++) {
       var language = json[i]['language'];
+      var region = json[i]['region'];
       var option = document.createElement("option");
+      //option.value = {language : region};
       option.value = language;
       option.text = language;
+      option.title = region;
       x.add(option);
     }
 
 $(".chzn-select").chosen().change(function(evt, params) {
       if (params.selected != undefined)
       {
-          currSettings.selected.push(params.selected)
-          console.log(currSettings.selected);
+        var language = params.selected;
+        var region = $('#selectList > option[value=' + language + ']').attr('title');
+
+          //currSettings.selected.push(params.selected)
+        currSettings.selected.push({language, region});
       }
       if (params.deselected != undefined)
       {
+        var language = $('option:selected', this).text();
+
           for(var i = currSettings.selected.length - 1; i >= 0; i--) {
-              if((currSettings.selected)[i] === params.deselected) {
+              if((currSettings.selected[i]).language === params.deselected) {
                  currSettings.selected.splice(i, 1);
               }
           }
-          console.log(currSettings.selected);
       }
       d3.select("svg").remove();
       document.getElementById("map").remove();
+      d3.select("#display_box").style("display", "none");
       document.getElementById("container").innerHTML += '<div id="map">';
       setUpChart(currSettings.scale);
       //updateDisplay();
@@ -230,10 +238,12 @@ function makeChart (scale) {
           var region = "";
           if ( localData && localData.Region ) {
             region = localData.Region;
-            console.log(currSettings.region);
             updateMap(region, localData.Country, false, false);
             updateDotsByRegion(region, dot, 1);
-            //currSettings.region = localData.Region;
+
+            // clear select list
+            $('#selectList').val('').trigger('chosen:updated');
+            currSettings.selected = [];
           }
           currSettings.language = "none";
           d3.select("#display_box").style("display", "none");
@@ -331,10 +341,12 @@ function makeChart (scale) {
     // Show specific language
     var array = currSettings.selected;
     if (typeof array != "undefined" && array != null && array.length > 0) {
-      console.log("empty??");
-      console.log(currSettings.selected);
       updateDotsByLanguages(1);
     }
+
+    var where = "";
+    var country = "";
+    updateMap(where, country, false, false);
  
     function numberWithCommas(x) {
         return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -360,6 +372,10 @@ function makeChart (scale) {
       
     // Change opacity of dots and map based on which one you clicked
     function clicked(d, i) {
+      // clear select list
+      $('#selectList').val('').trigger('chosen:updated');
+      currSettings.selected = [];
+
       displayData(d, i);    
         
       dot.style("stroke-width", 1)
@@ -391,7 +407,6 @@ function makeChart (scale) {
 
     // Link map with dots
     function updateDotsByRegion(region, dot, selectedOpacity) {
-      console.log("UPDATING DOTS");
       if (region != "none") {
         dot.style("opacity", function(d) {
           var location = d.region;
@@ -402,25 +417,32 @@ function makeChart (scale) {
           }
         })
       } else {
-        console.log("region = none!!!");
         dot.style("opacity", 1);
       }
     }
 
     // Link map with dots
     function updateDotsByLanguages(selectedOpacity) {
-      if (currSettings.selected != {}) {
+      if (typeof currSettings.selected !== 'undefined' && currSettings.selected.length > 0) {
         dot.style("opacity", function(d) {
           var language = d.language;
-          if (currSettings.selected.indexOf(language) >= 0) {
-            return selectedOpacity;
-          } else {
-            return 0.15;
+          var length = currSettings.selected.length;
+          var opacity = 0.15;
+
+          for (var i = 0; i < length; i++) {
+            if ((currSettings.selected[i]).language == language) {
+              opacity = selectedOpacity;
+            }
           }
-        })
-      } else {
-        dot.style("opacity", 1);
-      }
+          return opacity;
+          })
+        } else {
+          dot.style("opacity", 1);
+        }
+        currSettings.region = "multiple";
+        console.log(currSettings.language);
+        console.log(currSettings.region);
+        updateMap("none", "none", false, false);
     }
 
     // Add an overlay for the year label.
@@ -524,21 +546,33 @@ function makeChart (scale) {
       return a[1];
     }
 
-
-    var where = "";
-    var country = "";
-    updateMap(where, country, false, false);
-
     function updateMap (region, country, sameRegion, sameLanguage) {
-      console.log("updating map");
         var countryFill = getFillKey(region);
 
         d3.csv("regions.csv", function(error, data) {
+
+        // highlight multiple regions
+        if (typeof currSettings.selected !== 'undefined' && currSettings.selected.length > 0) {
+          for (var i = 0; i < data.length; i++) { 
+            data[i].fillKey = getLightFillKey(data[i].Region);
+
+            for (var j = 0; j < currSettings.selected.length; j++) { 
+                if (data[i].Region == 
+                  (currSettings.selected[j]).region) {
+                  data[i].fillKey = getFillKey(currSettings.selected[j].region);
+                } 
+              }
+            data[ data[i].ISO] = data[i] ;
+            delete  data[i].ISO;
+            delete  data[i] ;
+            }  
+        }  
+
         // normal map; no highlighting of a specific region
-        if (((region == "") || (region == currSettings.region) && (sameRegion == false)) || sameLanguage) {
+        else if (((region == "") || (region == currSettings.region) && (sameRegion == false)) || sameLanguage) {
           if (region == currSettings.region) {
-            console.log("region == currSettings.region");
             console.log(region);
+            console.log(currSettings.region);
             updateDotsByRegion("none", dot, 1);
           }
           for (var i = 0; i < data.length; i++) { 
@@ -553,7 +587,6 @@ function makeChart (scale) {
 
         // highlight a specific region
         } else { 
-          console.log("trying to highlight a region");
           for (var i = 0; i < data.length; i++) { 
               data[i].fillKey = {};
               if (data[i].Region == region) {
@@ -565,15 +598,14 @@ function makeChart (scale) {
               // decrease saturation for all other regions         
                data[i].fillKey = getLightFillKey(data[i].Region);
               }
-
               data[ data[i].ISO] = data[i] ;
-
               delete  data[i].ISO;
               delete  data[i] ;
           }  
           currSettings.highlighted = true;
           currSettings.region = region;    
         }
+
         map.updateChoropleth(data, {reset: true});
       }
     );
