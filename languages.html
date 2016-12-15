@@ -111,9 +111,8 @@ $(".chzn-select").chosen().change(function(evt, params) {
       if (params.selected != undefined)
       {
         var language = params.selected;
-        var region = $('#selectList > option[value=' + language + ']').attr('title');
+        var region = $('#selectList > option[value="' + language + '"]').attr('title');
 
-          //currSettings.selected.push(params.selected)
         currSettings.selected.push({language, region});
       }
       if (params.deselected != undefined)
